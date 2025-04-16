@@ -1,0 +1,775 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #121212;
+    color: #f5f5f5;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: #f5f5f5;
+}
+
+ul {
+    list-style: none;
+}
+
+/* Header Styles */
+header {
+    background-color: #8b0000;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.logo h1 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+nav ul {
+    display: flex;
+}
+
+nav ul li {
+    margin-left: 1.5rem;
+}
+
+nav ul li a {
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover {
+    color: #ffcc00;
+}
+
+/* Main Content Styles */
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: #8b0000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #ffcc00;
+    color: #000;
+}
+
+.btn.browse-btn {
+    background-color: #6c757d;
+}
+
+.btn.browse-btn:hover {
+    background-color: #5a6268;
+}
+
+.btn.cancel-btn {
+    background-color: #dc3545;
+}
+
+.btn.cancel-btn:hover {
+    background-color: #c82333;
+}
+
+.btn.view-btn {
+    background-color: #6c757d;
+}
+
+.btn.view-btn:hover {
+    background-color: #5a6268;
+}
+
+.btn.filter-btn {
+    background-color: #6c757d;
+}
+
+.btn.filter-btn:hover {
+    background-color: #5a6268;
+}
+
+.btn.add-btn {
+    background-color: #28a745;
+}
+
+.btn.add-btn:hover {
+    background-color: #218838;
+}
+
+.btn.prev-btn, .btn.next-btn {
+    background-color: #6c757d;
+}
+
+.btn.prev-btn:hover, .btn.next-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Movie List Styles */
+.movie-list h2 {
+    margin-bottom: 1.5rem;
+    color: #ffcc00;
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.movie-card {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+}
+
+.movie-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.movie-card h3 {
+    padding: 0.8rem;
+    font-size: 1.2rem;
+}
+
+.movie-card p {
+    padding: 0 0.8rem;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.movie-card .btn {
+    display: block;
+    text-align: center;
+    margin: 0.8rem;
+}
+
+/* Movie Description Styles */
+.movie-description {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.movie-info {
+    display: flex;
+    gap: 2rem;
+}
+
+.movie-poster {
+    flex: 0 0 250px;
+}
+
+.movie-poster img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.movie-details {
+    flex: 1;
+}
+
+.movie-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    color: #aaa;
+}
+
+.movie-description p {
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+.select-seat-btn {
+    padding: 0.8rem 1.5rem;
+}
+
+/* Seat Selection Styles */
+.seat-selection h2 {
+    margin-bottom: 1.5rem;
+    color: #ffcc00;
+}
+
+.movie-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1.5rem;
+}
+
+.movie-header img {
+    width: 100px;
+    border-radius: 4px;
+}
+
+.movie-header div h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.showtime-selection h3,
+.seat-grid-container h3,
+.booking-summary h3 {
+    margin-bottom: 1rem;
+    color: #ffcc00;
+}
+
+.showtime-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.showtime-option {
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1rem;
+    transition: border-color 0.3s;
+}
+
+.showtime-option:hover,
+.showtime-option input:checked + label {
+    border-color: #8b0000;
+    background-color: #2a2a2a;
+}
+
+.showtime-option .hall {
+    font-weight: bold;
+    color: #ffcc00;
+}
+
+.showtime-option .date,
+.showtime-option .time {
+    display: block;
+    margin: 0.3rem 0;
+}
+
+.showtime-option .price {
+    font-weight: bold;
+    color: #8b0000;
+}
+
+.seat-grid {
+    margin-bottom: 2rem;
+}
+
+.screen {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #8b0000;
+}
+
+.seats-container {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem;
+}
+
+.seat {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.seat.available {
+    background-color: #8b0000;
+}
+
+.seat.occupied {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.seat.selected {
+    background-color: #ffcc00;
+    color: #000;
+    font-weight: bold;
+}
+
+.seat-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-item span {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.legend-item.available span {
+    background-color: #8b0000;
+}
+
+.legend-item.selected span {
+    background-color: #ffcc00;
+}
+
+.legend-item.occupied span {
+    background-color: #555;
+}
+
+.summary-details {
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.summary-item.total {
+    font-weight: bold;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Payment Page Styles */
+.payment-section h2 {
+    margin-bottom: 1.5rem;
+    color: #ffcc00;
+}
+
+.payment-form {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.payment-details,
+.payment-method,
+.payment-info {
+    margin-bottom: 1.5rem;
+}
+
+.payment-details h3,
+.payment-method h3,
+.payment-info h3 {
+    margin-bottom: 1rem;
+    color: #ffcc00;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #f5f5f5;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.payment-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.payment-option {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+}
+
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Booking Confirmation Styles */
+.confirmation-section {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.confirmation-card {
+    text-align: center;
+}
+
+.confirmation-card h2 {
+    color: #ffcc00;
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-details {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.confirmation-details h3 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+}
+
+.booking-summary {
+    background-color: #333;
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+
+.summary-item.total {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    color: #ffcc00;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* Admin Dashboard Styles */
+.admin-dashboard {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.admin-dashboard h2 {
+    color: #ffcc00;
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffcc00;
+}
+
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-section {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.dashboard-section h3 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+}
+
+.bookings-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.bookings-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bookings-table th {
+    background-color: #1a1a1a;
+    color: #ffcc00;
+    text-align: left;
+    padding: 1rem;
+}
+
+.bookings-table td {
+    padding: 1rem;
+    border-top: 1px solid #333;
+}
+
+.view-all-btn {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* User Bookings Styles */
+.user-bookings h2 {
+    margin-bottom: 1.5rem;
+    color: #ffcc00;
+}
+
+.no-bookings {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.no-bookings p {
+    margin-bottom: 1.5rem;
+    color: #aaa;
+}
+
+.bookings-table {
+    margin-top: 2rem;
+    overflow-x: auto;
+}
+
+.bookings-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bookings-table th {
+    background-color: #1a1a1a;
+    color: #ffcc00;
+    font-weight: 600;
+    text-align: left;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #333;
+}
+
+.bookings-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #333;
+    color: #fff;
+}
+
+.bookings-table tr:last-child td {
+    border-bottom: none;
+}
+
+.bookings-table tr:hover {
+    background-color: #2a2a2a;
+}
+
+.status {
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status.pending {
+    background-color: #444;
+    color: #fff;
+}
+
+.status.confirmed {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.status.cancelled {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+}
+
+.page-link.active {
+    background-color: #8b0000;
+}
+
+.page-link:hover:not(.active) {
+    background-color: #444;
+}
+
+/* Footer Styles */
+footer {
+    background-color: #1a1a1a;
+    padding: 2rem;
+    margin-top: 3rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-icons a {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.social-icons a:hover {
+    background-color: #8b0000;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 2rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+    text-align: center;
+    color: #888;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    nav ul {
+        margin-top: 1rem;
+    }
+    
+    .movie-info {
+        flex-direction: column;
+    }
+    
+    .movie-poster {
+        flex: 0 0 auto;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+    
+    .showtime-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .dashboard-sections {
+        grid-template-columns: 1fr;
+    }
+}
