@@ -1,6 +1,8 @@
 <?php
 include 'includes/header.php';
+include 'includes/functions.php';
 
+// Get movie details
 $movie_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($movie_id <= 0) {
@@ -16,12 +18,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $movie = $result->fetch_assoc();
 
-if (!$movie) {
-    echo '<p>Movie not found.</p>';
-    $conn->close();
-    include 'includes/footer.php';
-    exit();
-}
+$conn->close();
 ?>
 
 <section class="movie-description">
@@ -37,12 +34,21 @@ if (!$movie) {
                 <span class="release-date">Release: <?php echo date('M d, Y', strtotime($movie['release_date'])); ?></span>
             </p>
             <p class="movie-description"><?php echo $movie['description']; ?></p>
-            <a href="seat-selection.php?movie_id=<?php echo $movie['movie_id']; ?>" class="btn select-seat-btn">Select Seat</a>
+            
+            <?php if (!empty($movie['trailer_url'])): ?>
+                <div class="trailer-section">
+                    <h3>Trailer</h3>
+                    <div class="trailer-container">
+                        <iframe src="<?php echo htmlspecialchars($movie['trailer_url']); ?>" allowfullscreen></iframe>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+            <a href="seat-selection.php?movie_id=<?php echo $movie_id; ?>" class="btn select-seat-btn">Select Seat</a>
         </div>
     </div>
 </section>
 
 <?php
-$conn->close();
 include 'includes/footer.php';
 ?>

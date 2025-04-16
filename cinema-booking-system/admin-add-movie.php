@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $duration = intval($_POST['duration']);
     $release_date = $_POST['release_date'];
     $poster = $_FILES['poster'];
+    $trailer_url = trim($_POST['trailer_url']); // New field for trailer
     
     // Validate required fields
     $errors = [];
@@ -34,6 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($poster['error'] !== UPLOAD_ERR_OK) {
         $errors[] = 'Poster upload failed';
+    }
+    
+    // Validate trailer URL format
+    if (!empty($trailer_url) && !filter_var($trailer_url, FILTER_VALIDATE_URL)) {
+        $errors[] = 'Invalid trailer URL format';
     }
     
     // Check for valid image upload
@@ -55,28 +61,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (move_uploaded_file($poster['tmp_name'], $posterPath)) {
             // Insert movie into database
             $conn = dbConnect();
-            $sql = "INSERT INTO movies (title, description, genre, duration, release_date, poster_url) 
-                    VALUES (?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO movies (title, description, genre, duration, release_date, poster_url, trailer_url) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ssssiss', $title, $description, $genre, $duration, $release_date, $posterPath, $trailer_url);
             
-            // Corrected bind_param with proper type string and variables
-            if ($stmt) {
-                $stmt->bind_param('ssssis', $title, $description, $genre, $duration, $release_date, $posterPath);
-                
-                if ($stmt->execute()) {
-                    $success = "Movie added successfully";
-                    $title = $description = $genre = '';
-                    $duration = 0;
-                    $release_date = '';
-                } else {
-                    $errors[] = "Failed to add movie: " . $stmt->error;
-                }
-                
-                $stmt->close();
+            if ($stmt->execute()) {
+                $success = "Movie added successfully";
+                $title = $description = $genre = '';
+                $duration = 0;
+                $release_date = '';
+                $trailer_url = '';
             } else {
-                $errors[] = "Failed to prepare statement: " . $conn->error;
+                $errors[] = "Failed to add movie: " . $conn->error;
             }
             
+            $stmt->close();
             $conn->close();
         } else {
             $errors[] = "Failed to move uploaded file";
@@ -128,6 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="poster">Poster Image *</label>
             <input type="file" id="poster" name="poster" accept="image/jpeg,image/png,image/gif" required>
             <p class="help-text">Allowed formats: JPG, PNG, GIF. Max size: 5MB</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="trailer_url">Trailer URL</label>
+            <input type="text" id="trailer_url" name="trailer_url" value="<?php echo isset($trailer_url) ? htmlspecialchars($trailer_url) : ''; ?>" placeholder="https://www.youtube.com/embed/...">
+            <p class="help-text">Paste a YouTube or Vimeo embed URL</p>
         </div>
         
         <div class="form-actions">

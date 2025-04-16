@@ -14,7 +14,7 @@ include_once 'includes/config.php';
 <body>
     <header>
         <div class="logo">
-            <h1>CINEMA INDONESIA</h1>
+            <h1>Cinema Indonesia</h1>
         </div>
         <nav>
             <ul>
