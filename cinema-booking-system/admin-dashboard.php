@@ -31,6 +31,27 @@ $sqlHalls = "SELECT COUNT(*) AS total FROM halls";
 $resultHalls = $conn->query($sqlHalls);
 $hallsCount = $resultHalls->fetch_assoc()['total'];
 
+// Get data for charts
+$sqlBookingsByMonth = "SELECT 
+    DATE_FORMAT(booking_date, '%Y-%m') AS month,
+    COUNT(*) AS total_bookings,
+    SUM(total_amount) AS total_revenue
+FROM bookings
+GROUP BY DATE_FORMAT(booking_date, '%Y-%m')
+ORDER BY month DESC
+LIMIT 6";
+
+$resultBookingsByMonth = $conn->query($sqlBookingsByMonth);
+$bookingsByMonth = [];
+$revenueByMonth = [];
+$months = [];
+
+while ($row = $resultBookingsByMonth->fetch_assoc()) {
+    $months[] = date('M Y', strtotime($row['month']));
+    $bookingsByMonth[] = $row['total_bookings'];
+    $revenueByMonth[] = $row['total_revenue'];
+}
+
 $conn->close();
 ?>
 
@@ -92,8 +113,92 @@ $conn->close();
                 <a href="admin-manage-showtimes.php" class="btn manage-btn">Manage Showtimes</a>
             </div>
         </div>
+        
+        <div class="dashboard-section">
+            <h3>Manage Users</h3>
+            <div class="action-buttons">
+                <a href="admin-manage-users.php" class="btn manage-btn">Manage Users</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-analytics">
+        <h2>Analytics</h2>
+        
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>Bookings by Month</h3>
+                <canvas id="bookingsChart"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Revenue by Month</h3>
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bookings Chart
+    const bookingsCtx = document.getElementById('bookingsChart').getContext('2d');
+    new Chart(bookingsCtx, {
+        type: 'line',
+        data: {
+            labels: <?php echo json_encode($months); ?>,
+            datasets: [{
+                label: 'Total Bookings',
+                data: <?php echo json_encode($bookingsByMonth); ?>,
+                borderColor: '#ffcc00',
+                backgroundColor: 'rgba(255, 204, 0, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($months); ?>,
+            datasets: [{
+                label: 'Total Revenue (IDR)',
+                data: <?php echo json_encode($revenueByMonth); ?>,
+                backgroundColor: '#8b0000'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
 
 <?php
 include 'includes/footer.php';
