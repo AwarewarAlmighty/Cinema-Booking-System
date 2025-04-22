@@ -12,12 +12,19 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $movie_id = intval($_GET['id']);
     
-    // Delete movie from database
+    // Delete related showtimes first
     $conn = dbConnect();
+    
+    $sql = "DELETE FROM showtimes WHERE movie_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $movie_id);
+    $stmt->execute();
+    
+    // Delete movie from database
     $sql = "DELETE FROM movies WHERE movie_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('i', $movie_id);
-    
+
     if ($stmt->execute()) {
         $delete_success = "Movie deleted successfully";
     } else {

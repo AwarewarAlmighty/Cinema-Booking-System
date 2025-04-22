@@ -135,7 +135,7 @@ $conn->close();
         
         <div class="form-group">
             <label for="show_date">Show Date *</label>
-            <input type="date" id="show_date" name="show_date" value="<?php echo $show_date; ?>" min="<?php echo date('Y-m-d'); ?>" required>
+            <input type="date" id="show_date" name="show_date" value="<?php echo $show_date; ?>" required>
         </div>
         
         <div class="form-row">
@@ -151,7 +151,7 @@ $conn->close();
         
         <div class="form-group">
             <label for="ticket_price">Ticket Price (IDR) *</label>
-            <input type="number" id="ticket_price" name="ticket_price" value="<?php echo $ticket_price; ?>" min="1" step="1000" required>
+            <input type="number" id="ticket_price" name="ticket_price" value="<?php echo $ticket_price; ?>" min="1" required>
         </div>
         
         <div class="form-actions">
