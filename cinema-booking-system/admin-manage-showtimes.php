@@ -12,19 +12,33 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $showtime_id = intval($_GET['id']);
     
-    // Delete showtime from database
+    // Check if showtime is referenced by any bookings
     $conn = dbConnect();
-    $sql = "DELETE FROM showtimes WHERE showtime_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $showtime_id);
+    $sqlCheckBookings = "SELECT COUNT(*) AS count FROM bookings WHERE showtime_id = ?";
+    $stmtCheck = $conn->prepare($sqlCheckBookings);
+    $stmtCheck->bind_param('i', $showtime_id);
+    $stmtCheck->execute();
+    $resultCheck = $stmtCheck->get_result();
+    $bookingsCount = $resultCheck->fetch_assoc()['count'];
     
-    if ($stmt->execute()) {
-        $delete_success = "Showtime deleted successfully";
+    if ($bookingsCount > 0) {
+        $delete_error = "Cannot delete this showtime. It is still referenced by " . $bookingsCount . " booking(s).";
     } else {
-        $delete_error = "Failed to delete showtime: " . $conn->error;
+        // Delete showtime from database
+        $sql = "DELETE FROM showtimes WHERE showtime_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $showtime_id);
+        
+        if ($stmt->execute()) {
+            $delete_success = "Showtime deleted successfully";
+        } else {
+            $delete_error = "Failed to delete showtime: " . $conn->error;
+        }
+        
+        $stmt->close();
     }
     
-    $stmt->close();
+    $stmtCheck->close();
     $conn->close();
 }
 

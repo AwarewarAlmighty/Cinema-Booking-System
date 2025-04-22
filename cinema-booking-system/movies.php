@@ -18,6 +18,10 @@ $conn->close();
                 <label for="genre">Genre</label>
                 <select id="genre" name="genre">
                     <option value="">All Genres</option>
+                    <option value="action">Action</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="drama">Drama</option>
+                    <option value="horror">Horror</option>
                     <!-- Add genre options dynamically if needed -->
                 </select>
             </div>

@@ -12,19 +12,33 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $movie_id = intval($_GET['id']);
     
-    // Delete movie from database
+    // Check if movie is referenced by any showtimes
     $conn = dbConnect();
-    $sql = "DELETE FROM movies WHERE movie_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $movie_id);
+    $sqlCheckShowtimes = "SELECT COUNT(*) AS count FROM showtimes WHERE movie_id = ?";
+    $stmtCheck = $conn->prepare($sqlCheckShowtimes);
+    $stmtCheck->bind_param('i', $movie_id);
+    $stmtCheck->execute();
+    $resultCheck = $stmtCheck->get_result();
+    $showtimesCount = $resultCheck->fetch_assoc()['count'];
     
-    if ($stmt->execute()) {
-        $delete_success = "Movie deleted successfully";
+    if ($showtimesCount > 0) {
+        $delete_error = "Cannot delete this movie. It is still referenced by " . $showtimesCount . " showtime(s).";
     } else {
-        $delete_error = "Failed to delete movie: " . $conn->error;
+        // Delete movie from database
+        $sql = "DELETE FROM movies WHERE movie_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $movie_id);
+        
+        if ($stmt->execute()) {
+            $delete_success = "Movie deleted successfully";
+        } else {
+            $delete_error = "Failed to delete movie: " . $conn->error;
+        }
+        
+        $stmt->close();
     }
     
-    $stmt->close();
+    $stmtCheck->close();
     $conn->close();
 }
 

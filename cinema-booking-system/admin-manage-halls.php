@@ -12,19 +12,33 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $hall_id = intval($_GET['id']);
     
-    // Delete hall from database
+    // Check if hall is referenced by any showtimes
     $conn = dbConnect();
-    $sql = "DELETE FROM halls WHERE hall_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $hall_id);
+    $sqlCheckShowtimes = "SELECT COUNT(*) AS count FROM showtimes WHERE hall_id = ?";
+    $stmtCheck = $conn->prepare($sqlCheckShowtimes);
+    $stmtCheck->bind_param('i', $hall_id);
+    $stmtCheck->execute();
+    $resultCheck = $stmtCheck->get_result();
+    $showtimesCount = $resultCheck->fetch_assoc()['count'];
     
-    if ($stmt->execute()) {
-        $delete_success = "Hall deleted successfully";
+    if ($showtimesCount > 0) {
+        $delete_error = "Cannot delete this hall. It is still referenced by " . $showtimesCount . " showtime(s).";
     } else {
-        $delete_error = "Failed to delete hall: " . $conn->error;
+        // Delete hall from database
+        $sql = "DELETE FROM halls WHERE hall_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $hall_id);
+        
+        if ($stmt->execute()) {
+            $delete_success = "Hall deleted successfully";
+        } else {
+            $delete_error = "Failed to delete hall: " . $conn->error;
+        }
+        
+        $stmt->close();
     }
     
-    $stmt->close();
+    $stmtCheck->close();
     $conn->close();
 }
 
