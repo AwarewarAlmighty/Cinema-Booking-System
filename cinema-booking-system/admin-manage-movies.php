@@ -12,25 +12,65 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $movie_id = intval($_GET['id']);
     
-    // Delete movie from database
+    // Delete related showtimes and their dependencies
     $conn = dbConnect();
-    $sql = "DELETE FROM movies WHERE movie_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $movie_id);
     
-    if ($stmt->execute()) {
-        $delete_success = "Movie deleted successfully";
+    // Delete related payments
+    $sqlPayments = "DELETE p FROM payments p 
+                    JOIN bookings b ON p.booking_id = b.booking_id 
+                    JOIN showtimes s ON b.showtime_id = s.showtime_id 
+                    WHERE s.movie_id = ?";
+    $stmtPayments = $conn->prepare($sqlPayments);
+    $stmtPayments->bind_param('i', $movie_id);
+    
+    if ($stmtPayments->execute()) {
+        // Delete related bookings
+        $sqlBookings = "DELETE b FROM bookings b 
+                        JOIN showtimes s ON b.showtime_id = s.showtime_id 
+                        WHERE s.movie_id = ?";
+        $stmtBookings = $conn->prepare($sqlBookings);
+        $stmtBookings->bind_param('i', $movie_id);
+        
+        if ($stmtBookings->execute()) {
+            // Delete related showtimes
+            $sqlShowtimes = "DELETE FROM showtimes WHERE movie_id = ?";
+            $stmtShowtimes = $conn->prepare($sqlShowtimes);
+            $stmtShowtimes->bind_param('i', $movie_id);
+            
+            if ($stmtShowtimes->execute()) {
+                // Now delete the movie
+                $sqlMovie = "DELETE FROM movies WHERE movie_id = ?";
+                $stmtMovie = $conn->prepare($sqlMovie);
+                $stmtMovie->bind_param('i', $movie_id);
+                
+                if ($stmtMovie->execute()) {
+                    $delete_success = "Movie deleted successfully";
+                } else {
+                    $delete_error = "Failed to delete movie: " . $stmtMovie->error;
+                }
+                
+                $stmtMovie->close();
+            } else {
+                $delete_error = "Failed to delete related showtimes: " . $stmtShowtimes->error;
+            }
+            
+            $stmtShowtimes->close();
+        } else {
+            $delete_error = "Failed to delete related bookings: " . $stmtBookings->error;
+        }
+        
+        $stmtBookings->close();
     } else {
-        $delete_error = "Failed to delete movie: " . $conn->error;
+        $delete_error = "Failed to delete related payments: " . $stmtPayments->error;
     }
     
-    $stmt->close();
+    $stmtPayments->close();
     $conn->close();
 }
 
 // Get all movies from database
 $conn = dbConnect();
-$sql = "SELECT * FROM movies ORDER BY release_date DESC";
+$sql = "SELECT * FROM movies ORDER BY title";
 $result = $conn->query($sql);
 $movies = $result->fetch_all(MYSQLI_ASSOC);
 $conn->close();
@@ -53,7 +93,7 @@ $conn->close();
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Movie ID</th>
                     <th>Title</th>
                     <th>Genre</th>
                     <th>Duration</th>

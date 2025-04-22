@@ -12,25 +12,49 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $showtime_id = intval($_GET['id']);
     
-    // Delete showtime from database
+    // Delete related bookings and payments
     $conn = dbConnect();
-    $sql = "DELETE FROM showtimes WHERE showtime_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $showtime_id);
     
-    if ($stmt->execute()) {
-        $delete_success = "Showtime deleted successfully";
+    // Delete related payments
+    $sqlPayments = "DELETE FROM payments WHERE booking_id IN (SELECT booking_id FROM bookings WHERE showtime_id = ?)";
+    $stmtPayments = $conn->prepare($sqlPayments);
+    $stmtPayments->bind_param('i', $showtime_id);
+    
+    if ($stmtPayments->execute()) {
+        // Delete related bookings
+        $sqlBookings = "DELETE FROM bookings WHERE showtime_id = ?";
+        $stmtBookings = $conn->prepare($sqlBookings);
+        $stmtBookings->bind_param('i', $showtime_id);
+        
+        if ($stmtBookings->execute()) {
+            // Now delete the showtime
+            $sqlShowtime = "DELETE FROM showtimes WHERE showtime_id = ?";
+            $stmtShowtime = $conn->prepare($sqlShowtime);
+            $stmtShowtime->bind_param('i', $showtime_id);
+            
+            if ($stmtShowtime->execute()) {
+                $delete_success = "Showtime deleted successfully";
+            } else {
+                $delete_error = "Failed to delete showtime: " . $stmtShowtime->error;
+            }
+            
+            $stmtShowtime->close();
+        } else {
+            $delete_error = "Failed to delete related bookings: " . $stmtBookings->error;
+        }
+        
+        $stmtBookings->close();
     } else {
-        $delete_error = "Failed to delete showtime: " . $conn->error;
+        $delete_error = "Failed to delete related payments: " . $stmtPayments->error;
     }
     
-    $stmt->close();
+    $stmtPayments->close();
     $conn->close();
 }
 
 // Get all showtimes from database
 $conn = dbConnect();
-$sql = "SELECT s.showtime_id, s.movie_id, s.hall_id, s.show_date, s.start_time, s.end_time, s.ticket_price, m.title, h.hall_name 
+$sql = "SELECT s.showtime_id, m.title, h.hall_name, s.show_date, s.start_time, s.end_time 
         FROM showtimes s 
         JOIN movies m ON s.movie_id = m.movie_id 
         JOIN halls h ON s.hall_id = h.hall_id 
@@ -63,7 +87,6 @@ $conn->close();
                     <th>Date</th>
                     <th>Start Time</th>
                     <th>End Time</th>
-                    <th>Ticket Price</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -77,9 +100,7 @@ $conn->close();
                             <td><?php echo date('M d, Y', strtotime($showtime['show_date'])); ?></td>
                             <td><?php echo date('h:ia', strtotime($showtime['start_time'])); ?></td>
                             <td><?php echo date('h:ia', strtotime($showtime['end_time'])); ?></td>
-                            <td>IDR <?php echo number_format($showtime['ticket_price']); ?></td>
                             <td>
-                                <a href="admin-view-showtime.php?id=<?php echo $showtime['showtime_id']; ?>" class="btn view-btn">View</a>
                                 <a href="admin-edit-showtime.php?id=<?php echo $showtime['showtime_id']; ?>" class="btn edit-btn">Edit</a>
                                 <a href="admin-manage-showtimes.php?action=delete&id=<?php echo $showtime['showtime_id']; ?>" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this showtime?');">Delete</a>
                             </td>
@@ -87,7 +108,7 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="no-data">No showtimes found</td>
+                        <td colspan="7" class="no-data">No showtimes found</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

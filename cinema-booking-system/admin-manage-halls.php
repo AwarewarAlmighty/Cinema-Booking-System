@@ -12,19 +12,59 @@ if (!isset($_SESSION['admin_id'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $hall_id = intval($_GET['id']);
     
-    // Delete hall from database
+    // Delete related showtimes and their dependencies
     $conn = dbConnect();
-    $sql = "DELETE FROM halls WHERE hall_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $hall_id);
     
-    if ($stmt->execute()) {
-        $delete_success = "Hall deleted successfully";
+    // Delete related payments
+    $sqlPayments = "DELETE p FROM payments p 
+                    JOIN bookings b ON p.booking_id = b.booking_id 
+                    JOIN showtimes s ON b.showtime_id = s.showtime_id 
+                    WHERE s.hall_id = ?";
+    $stmtPayments = $conn->prepare($sqlPayments);
+    $stmtPayments->bind_param('i', $hall_id);
+    
+    if ($stmtPayments->execute()) {
+        // Delete related bookings
+        $sqlBookings = "DELETE b FROM bookings b 
+                        JOIN showtimes s ON b.showtime_id = s.showtime_id 
+                        WHERE s.hall_id = ?";
+        $stmtBookings = $conn->prepare($sqlBookings);
+        $stmtBookings->bind_param('i', $hall_id);
+        
+        if ($stmtBookings->execute()) {
+            // Delete related showtimes
+            $sqlShowtimes = "DELETE FROM showtimes WHERE hall_id = ?";
+            $stmtShowtimes = $conn->prepare($sqlShowtimes);
+            $stmtShowtimes->bind_param('i', $hall_id);
+            
+            if ($stmtShowtimes->execute()) {
+                // Now delete the hall
+                $sqlHall = "DELETE FROM halls WHERE hall_id = ?";
+                $stmtHall = $conn->prepare($sqlHall);
+                $stmtHall->bind_param('i', $hall_id);
+                
+                if ($stmtHall->execute()) {
+                    $delete_success = "Hall deleted successfully";
+                } else {
+                    $delete_error = "Failed to delete hall: " . $stmtHall->error;
+                }
+                
+                $stmtHall->close();
+            } else {
+                $delete_error = "Failed to delete related showtimes: " . $stmtShowtimes->error;
+            }
+            
+            $stmtShowtimes->close();
+        } else {
+            $delete_error = "Failed to delete related bookings: " . $stmtBookings->error;
+        }
+        
+        $stmtBookings->close();
     } else {
-        $delete_error = "Failed to delete hall: " . $conn->error;
+        $delete_error = "Failed to delete related payments: " . $stmtPayments->error;
     }
     
-    $stmt->close();
+    $stmtPayments->close();
     $conn->close();
 }
 
