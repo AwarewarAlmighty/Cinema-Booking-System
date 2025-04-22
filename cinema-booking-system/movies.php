@@ -1,11 +1,29 @@
 <?php
 include 'includes/header.php';
 
-// Get movies from database
+// Get genres from database
 $conn = dbConnect();
-$sql = "SELECT * FROM movies WHERE release_date <= CURDATE() ORDER BY release_date DESC";
-$result = $conn->query($sql);
+$genreQuery = "SELECT DISTINCT genre FROM movies ORDER BY genre ASC";
+$genreResult = $conn->query($genreQuery);
+$genres = $genreResult->fetch_all(MYSQLI_ASSOC);
+
+// Get movies from database with optional genre filter
+$genreFilter = isset($_GET['genre']) && !empty($_GET['genre']) ? $_GET['genre'] : null;
+
+$sql = "SELECT * FROM movies WHERE release_date <= CURDATE()";
+if ($genreFilter) {
+    $sql .= " AND genre = ?";
+}
+$sql .= " ORDER BY release_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($genreFilter) {
+    $stmt->bind_param('s', $genreFilter);
+}
+$stmt->execute();
+$result = $stmt->get_result();
 $movies = $result->fetch_all(MYSQLI_ASSOC);
+
 $conn->close();
 ?>
 
@@ -18,7 +36,12 @@ $conn->close();
                 <label for="genre">Genre</label>
                 <select id="genre" name="genre">
                     <option value="">All Genres</option>
-                    <!-- Add genre options dynamically if needed -->
+                    <?php foreach ($genres as $genre): ?>
+                        <option value="<?php echo $genre['genre']; ?>" 
+                            <?php echo (isset($_GET['genre']) && $_GET['genre'] === $genre['genre']) ? 'selected' : ''; ?>>
+                            <?php echo $genre['genre']; ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <button type="submit" class="btn filter-btn">Apply Filters</button>
@@ -30,7 +53,7 @@ $conn->close();
             <?php foreach ($movies as $movie): ?>
                 <div class="movie-card">
                     <img src="<?php echo $movie['poster_url']; ?>" alt="<?php echo $movie['title']; ?>">
-                    <div class="movie-info">
+                    <div>
                         <h3><?php echo $movie['title']; ?></h3>
                         <p class="movie-meta">
                             <span class="genre"><?php echo $movie['genre']; ?></span>
@@ -45,10 +68,6 @@ $conn->close();
         <?php else: ?>
             <p class="no-movies">No movies currently available.</p>
         <?php endif; ?>
-    </div>
-    
-    <div class="pagination">
-        <!-- Add pagination controls if needed -->
     </div>
 </section>
 
