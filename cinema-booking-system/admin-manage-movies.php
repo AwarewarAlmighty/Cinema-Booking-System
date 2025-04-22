@@ -10,7 +10,6 @@ if (!isset($_SESSION['admin_id'])) {
 
 // Handle movie deletion
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    
     $movie_id = intval($_GET['id']);
     
     // Delete related showtimes and their dependencies
@@ -50,6 +49,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
                     $delete_error = "Failed to delete movie: " . $stmtMovie->error;
                 }
                 
+                $stmtMovie->close();
             } else {
                 $delete_error = "Failed to delete related showtimes: " . $stmtShowtimes->error;
             }
