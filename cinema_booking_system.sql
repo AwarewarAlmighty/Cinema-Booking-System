@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 16, 2025 at 05:56 PM
+-- Generation Time: Apr 22, 2025 at 06:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,6 +36,13 @@ CREATE TABLE `admins` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `admins`
+--
+
+INSERT INTO `admins` (`admin_id`, `username`, `password`, `full_name`, `email`, `created_at`) VALUES
+(4, 'zephylarius', '$2y$10$x8LdR8AFtQ0eVySBElFgyOGVPTt7basnHlvtDrc4jKhXplEzpDSoG', 'Zephy', 'zephylarius.zl@gmail.com', '2025-04-16 16:06:05');
+
 -- --------------------------------------------------------
 
 --
@@ -51,6 +58,16 @@ CREATE TABLE `bookings` (
   `total_amount` decimal(10,2) NOT NULL,
   `status` enum('pending','confirmed','cancelled') DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`booking_id`, `user_id`, `showtime_id`, `booking_date`, `total_seats`, `total_amount`, `status`) VALUES
+(2, 2, 2, '2025-04-22 13:21:08', 2, 50002.00, 'cancelled'),
+(3, 2, 2, '2025-04-22 13:23:56', 2, 50002.00, 'cancelled'),
+(4, 2, 2, '2025-04-22 15:51:26', 2, 50002.00, 'confirmed'),
+(5, 2, 2, '2025-04-22 16:00:36', 2, 50002.00, 'confirmed');
 
 -- --------------------------------------------------------
 
@@ -72,7 +89,8 @@ CREATE TABLE `halls` (
 --
 
 INSERT INTO `halls` (`hall_id`, `hall_name`, `total_seats`, `layout_rows`, `layout_columns`, `created_at`) VALUES
-(1, 'Cinema 1', 100, 10, 10, '2025-04-16 14:47:54');
+(1, 'Cinema 1', 100, 10, 10, '2025-04-16 14:47:54'),
+(2, 'Cinema 2', 200, 20, 10, '2025-04-22 13:23:22');
 
 -- --------------------------------------------------------
 
@@ -88,15 +106,16 @@ CREATE TABLE `movies` (
   `duration` int(11) DEFAULT NULL,
   `release_date` date DEFAULT NULL,
   `poster_url` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `trailer_url` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `movies`
 --
 
-INSERT INTO `movies` (`movie_id`, `title`, `description`, `genre`, `duration`, `release_date`, `poster_url`, `created_at`) VALUES
-(1, 'Pabrik Gula', '', 'Horror', 132, '0000-00-00', 'uploads/posters/67ffbaf20ac15_poster-film-pabrik-gula-yang-sempat-2-1b9d1.jpg', '2025-04-16 14:13:06');
+INSERT INTO `movies` (`movie_id`, `title`, `description`, `genre`, `duration`, `release_date`, `poster_url`, `created_at`, `trailer_url`) VALUES
+(1, 'Pabrik Gula', '', 'Horror', 132, '2025-03-31', 'uploads/posters/67ffbaf20ac15_poster-film-pabrik-gula-yang-sempat-2-1b9d1.jpg', '2025-04-16 14:13:06', 'https://www.youtube.com/embed/O76onpa-A7Y?si=S7lhykbFl5WCcqV3');
 
 -- --------------------------------------------------------
 
@@ -112,6 +131,17 @@ CREATE TABLE `payments` (
   `payment_method` enum('credit_card','debit_card','paypal','cash') NOT NULL,
   `status` enum('success','failed','pending') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`payment_id`, `booking_id`, `payment_date`, `amount`, `payment_method`, `status`) VALUES
+(1, 2, '2025-04-22 13:21:45', 50002.00, 'credit_card', 'success'),
+(2, 3, '2025-04-22 13:24:14', 50002.00, 'credit_card', 'success'),
+(3, 4, '2025-04-22 15:51:46', 50002.00, 'credit_card', 'success'),
+(4, 4, '2025-04-22 15:52:58', 50002.00, 'credit_card', 'success'),
+(5, 5, '2025-04-22 16:00:53', 50002.00, 'credit_card', 'success');
 
 -- --------------------------------------------------------
 
@@ -148,7 +178,7 @@ CREATE TABLE `showtimes` (
 --
 
 INSERT INTO `showtimes` (`showtime_id`, `movie_id`, `hall_id`, `show_date`, `start_time`, `end_time`, `ticket_price`) VALUES
-(1, 1, 1, '2025-04-17', '09:00:00', '12:00:00', 25001.00);
+(2, 1, 2, '2025-04-24', '10:00:00', '13:00:00', 25001.00);
 
 -- --------------------------------------------------------
 
@@ -165,6 +195,13 @@ CREATE TABLE `users` (
   `phone` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `username`, `password`, `full_name`, `email`, `phone`, `created_at`) VALUES
+(2, 'zephylarius', '$2y$10$x8LdR8AFtQ0eVySBElFgyOGVPTt7basnHlvtDrc4jKhXplEzpDSoG', 'Zephy', 'zephylarius.zl@gmail.com', '', '2025-04-16 16:06:05');
 
 --
 -- Indexes for dumped tables
@@ -234,31 +271,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `halls`
 --
 ALTER TABLE `halls`
-  MODIFY `hall_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `hall_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `movies`
 --
 ALTER TABLE `movies`
-  MODIFY `movie_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `movie_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `seats`
@@ -270,13 +307,13 @@ ALTER TABLE `seats`
 -- AUTO_INCREMENT for table `showtimes`
 --
 ALTER TABLE `showtimes`
-  MODIFY `showtime_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `showtime_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
