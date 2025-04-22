@@ -159,6 +159,39 @@ function createPayment($booking_id, $amount, $payment_method) {
 }
 
 /**
+ * Seat Functions
+ */
+function updateSeatAvailability($hall_id, $seat_ids) {
+    $conn = dbConnect();
+    
+    // Prepare the SQL query with the correct number of parameters
+    $placeholders = array_fill(0, count($seat_ids), '?');
+    $sqlUpdateSeats = "UPDATE seats SET is_available = 0 
+                       WHERE hall_id = ? AND seat_id IN (" . implode(',', $placeholders) . ")";
+    
+    $stmtUpdateSeats = $conn->prepare($sqlUpdateSeats);
+    
+    if ($stmtUpdateSeats) {
+        // Create the type string and parameter array
+        $types = 'i' . str_repeat('s', count($seat_ids));
+        $params = array_merge([$hall_id], $seat_ids);
+        
+        // Bind the parameters dynamically
+        $stmtUpdateSeats->bind_param($types, ...$params);
+        
+        $success = $stmtUpdateSeats->execute();
+        
+        $stmtUpdateSeats->close();
+        $conn->close();
+        
+        return $success;
+    } else {
+        $conn->close();
+        return false;
+    }
+}
+
+/**
  * Utility Functions
  */
 function generateSeatLayout($hall_id) {

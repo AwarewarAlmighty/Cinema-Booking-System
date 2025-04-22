@@ -244,45 +244,79 @@ document.addEventListener('DOMContentLoaded', function() {
         seatGrid.innerHTML = '<div class="screen">SCREEN</div><div class="seats-container"></div>';
         const seatsContainer = seatGrid.querySelector('.seats-container');
         
-        const rows = 'ABCDEFGHIJ';
-        const columns = 10;
-        let availableSeats = [];
-        
-        for (let i = 0; i < rows.length; i++) {
-            for (let j = 1; j <= columns; j++) {
-                const seatId = rows[i] + j;
-                const isOccupied = Math.random() < 0.2; // Randomly mark some seats as occupied
-                
-                if (!isOccupied) {
-                    availableSeats.push(seatId);
-                }
-                
-                const seat = document.createElement('div');
-                seat.className = isOccupied ? 'seat occupied' : 'seat available';
-                seat.dataset.seatId = seatId;
-                seat.textContent = seatId;
-                
-                seat.addEventListener('click', function() {
-                    if (this.classList.contains('occupied')) return;
+        // Fetch seat layout from server
+        fetch('get-seat-layout.php?showtime_id=' + showtimeId)
+            .then(response => response.json())
+            .then(seatLayout => {
+                seatLayout.forEach(seat => {
+                    const seatElement = document.createElement('div');
+                    seatElement.className = seat.is_available ? 'seat available' : 'seat occupied';
+                    seatElement.dataset.seatId = seat.seat_id;
+                    seatElement.textContent = seat.seat_id;
                     
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        this.classList.add('available');
-                        selectedSeats = selectedSeats.filter(seat => seat !== seatId);
-                    } else {
-                        this.classList.remove('available');
-                        this.classList.add('selected');
-                        selectedSeats.push(seatId);
+                    if (seat.is_available) {
+                        seatElement.addEventListener('click', function() {
+                            if (this.classList.contains('selected')) {
+                                this.classList.remove('selected');
+                                this.classList.add('available');
+                                selectedSeats = selectedSeats.filter(seatId => seatId !== seat.seat_id);
+                            } else {
+                                this.classList.remove('available');
+                                this.classList.add('selected');
+                                selectedSeats.push(seat.seat_id);
+                            }
+                            
+                            updateSummary();
+                        });
                     }
                     
-                    updateSummary();
+                    seatsContainer.appendChild(seatElement);
                 });
+            })
+            .catch(error => {
+                console.error('Error fetching seat layout:', error);
                 
-                seatsContainer.appendChild(seat);
-            }
-        }
-        
-        updateSummary();
+                // Fallback to client-side seat layout
+                const rows = 'ABCDEFGHIJ';
+                const columns = 10;
+                let availableSeats = [];
+                
+                for (let i = 0; i < rows.length; i++) {
+                    for (let j = 1; j <= columns; j++) {
+                        const seatId = rows[i] + j;
+                        const isOccupied = Math.random() < 0.2; // Randomly mark some seats as occupied
+                        
+                        if (!isOccupied) {
+                            availableSeats.push(seatId);
+                        }
+                        
+                        const seat = document.createElement('div');
+                        seat.className = isOccupied ? 'seat occupied' : 'seat available';
+                        seat.dataset.seatId = seatId;
+                        seat.textContent = seatId;
+                        
+                        if (!isOccupied) {
+                            seat.addEventListener('click', function() {
+                                if (this.classList.contains('selected')) {
+                                    this.classList.remove('selected');
+                                    this.classList.add('available');
+                                    selectedSeats = selectedSeats.filter(seat => seat !== seatId);
+                                } else {
+                                    this.classList.remove('available');
+                                    this.classList.add('selected');
+                                    selectedSeats.push(seatId);
+                                }
+                                
+                                updateSummary();
+                            });
+                        }
+                        
+                        seatsContainer.appendChild(seat);
+                    }
+                }
+                
+                updateSummary();
+            });
     }
     
     function updateSummary() {

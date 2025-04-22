@@ -18,8 +18,8 @@ if (!isset($_SESSION['booking_data'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payment_method = $_POST['payment_method'];
     $card_number = $_POST['card_number'];
-    $expiry_date = $_POST['card_expiry'];
-    $cvv = $_POST['card_cvv'];
+    $expiry_date = $_POST['expiry_date'];
+    $cvv = $_POST['cvv'];
     
     // Validate payment details
     $errors = validatePayment($_POST);
@@ -33,12 +33,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update booking status to confirmed
             updateBookingStatus($booking_id, 'confirmed');
             
-            // Clear booking data from session
-            unset($_SESSION['booking_data']);
+            // Update seat availability
+            $hall_id = $_SESSION['booking_data']['hall_id'];
+            $selected_seats = $_SESSION['booking_data']['selected_seats'];
             
-            // Redirect to booking confirmation
-            header('Location: booking-confirmation.php');
-            exit();
+            if (updateSeatAvailability($hall_id, $selected_seats)) {
+                // Clear booking data from session
+                unset($_SESSION['booking_data']);
+                
+                // Redirect to booking confirmation
+                header('Location: booking-confirmation.php');
+                exit();
+            } else {
+                $error = "Failed to update seat availability";
+            }
         } else {
             $error = "Payment processing failed. Please try again.";
         }
