@@ -76,7 +76,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-dark-700 mt-8 pt-8 text-center text-slate-400">
-          <p>&copy; {new Date().getFullYear()} Cinema Indonesia. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Coding Ultimate Team(CUT). All rights reserved.</p>
         </div>
       </div>
     </footer>
