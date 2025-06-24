@@ -1,89 +1,96 @@
-import { useEffect, useState } from 'react'
-import { Plus, Edit, Trash2, Eye } from 'lucide-react'
-import { supabase, type Movie } from '@/lib/supabase'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { useEffect, useState } from 'react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { supabase, type Movie } from '@/lib/supabase';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminMoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(true)
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchMovies()
-  }, [])
+    fetchMovies();
+  }, []);
 
   const fetchMovies = async () => {
     try {
       const { data, error } = await supabase
         .from('movies')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      setMovies(data || [])
+      if (error) throw error;
+      setMovies(data || []);
     } catch (error) {
-      console.error('Error fetching movies:', error)
-      toast.error('Failed to load movies')
+      console.error('Error fetching movies:', error);
+      toast.error('Failed to load movies');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDeleteMovie = async (movieId: string) => {
     if (!confirm('Are you sure you want to delete this movie? This will also delete all related showtimes.')) {
-      return
+      return;
     }
 
     try {
       // First delete related showtimes
-      await supabase
-        .from('showtimes')
-        .delete()
-        .eq('movie_id', movieId)
+      await supabase.from('showtimes').delete().eq('movie_id', movieId);
 
       // Then delete the movie
-      const { error } = await supabase
-        .from('movies')
-        .delete()
-        .eq('movie_id', movieId)
+      const { error } = await supabase.from('movies').delete().eq('movie_id', movieId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      toast.success('Movie deleted successfully')
-      fetchMovies()
+      toast.success('Movie deleted successfully');
+      fetchMovies();
     } catch (error) {
-      console.error('Error deleting movie:', error)
-      toast.error('Failed to delete movie')
+      console.error('Error deleting movie:', error);
+      toast.error('Failed to delete movie');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold">Movies</h1>
           <p className="text-slate-400">Manage your movie catalog</p>
         </div>
-        <button className="btn btn-primary flex items-center space-x-2">
+        <button
+          onClick={() => navigate('/admin/movies/create')}
+          className="btn btn-primary flex items-center space-x-2"
+        >
           <Plus className="h-5 w-5" />
           <span>Add Movie</span>
         </button>
       </div>
 
+      {/* No movies fallback */}
       {movies.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-slate-400 text-lg mb-4">No movies found</p>
-          <button className="btn btn-primary">Add Your First Movie</button>
+          <button
+            onClick={() => navigate('/admin/movies/create')}
+            className="btn btn-primary"
+          >
+            Add Your First Movie
+          </button>
         </div>
       ) : (
+        // Movies table
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -112,7 +119,10 @@ export default function AdminMoviesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <img
-                          src={movie.poster_url || 'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=100&h=150&fit=crop'}
+                          src={
+                            movie.poster_url ||
+                            'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=100&h=150&fit=crop'
+                          }
                           alt={movie.title}
                           className="w-12 h-18 object-cover rounded"
                         />
@@ -139,12 +149,21 @@ export default function AdminMoviesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button className="text-blue-400 hover:text-blue-300">
+                        {/* View */}
+                        <button
+                          onClick={() => navigate(`/admin/movies/view/${movie.movie_id}`)}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-green-400 hover:text-green-300">
+                        {/* Edit */}
+                        <button
+                          onClick={() => navigate(`/admin/movies/edit/${movie.movie_id}`)}
+                          className="text-green-400 hover:text-green-300"
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
+                        {/* Delete */}
                         <button
                           onClick={() => handleDeleteMovie(movie.movie_id)}
                           className="text-red-400 hover:text-red-300"
@@ -161,5 +180,5 @@ export default function AdminMoviesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
