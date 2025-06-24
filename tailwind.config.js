@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        border: '#334155', // This is the fix for the error
         primary: {
           50: '#fef2f2',
           100: '#fee2e2',
