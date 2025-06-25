@@ -1,20 +1,31 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { Film, User, LogOut, Settings } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import toast from 'react-hot-toast'
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Film, User, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
+import { clsx } from 'clsx';
 
 export default function Header() {
-  const { user, isAdmin, signOut } = useAuth()
-  const navigate = useNavigate()
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      toast.success('Signed out successfully')
-      navigate('/')
+      await signOut();
+      toast.success('Signed out successfully');
+      navigate('/');
     } catch (error) {
-      toast.error('Error signing out')
+      toast.error('Error signing out');
     }
+  };
+
+  const navItems = [
+    { href: '/', label: 'Home' },
+    { href: '/movies', label: 'Movies' },
+  ];
+
+  if (user) {
+    navItems.push({ href: '/bookings', label: 'My Bookings' });
   }
 
   return (
@@ -31,26 +42,21 @@ export default function Header() {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className="text-slate-300 hover:text-white transition-colors font-medium"
-            >
-              Home
-            </Link>
-            <Link 
-              to="/movies" 
-              className="text-slate-300 hover:text-white transition-colors font-medium"
-            >
-              Movies
-            </Link>
-            {user && (
-              <Link 
-                to="/bookings" 
-                className="text-slate-300 hover:text-white transition-colors font-medium"
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={clsx(
+                  "relative text-slate-300 hover:text-white transition-colors font-medium py-2",
+                  "after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:bg-primary-500 after:transition-all after:duration-300",
+                  location.pathname === item.href
+                    ? 'text-white after:w-full' // Active state
+                    : 'after:w-0' // Inactive state
+                )}
               >
-                My Bookings
+                {item.label}
               </Link>
-            )}
+            ))}
           </nav>
 
           {/* User Menu */}
@@ -94,5 +100,5 @@ export default function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }
