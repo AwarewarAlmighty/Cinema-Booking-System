@@ -15,7 +15,7 @@ export default function LoadingSpinner({
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-12 w-12',
-    lg: 'h-16 w-16',
+    lg: 'h-16 h-16',
   };
 
   return (
@@ -31,13 +31,14 @@ export default function LoadingSpinner({
             stroke-dashoffset: 200;
           }
           
-          .box {
-            transform-origin: center;
+          .climber {
+            transform-origin: bottom center;
             animation: climb 1.5s infinite steps(4);
           }
-          .box.stopped {
+          .climber.stopped {
             animation: none;
-            transform: translateY(75%) rotate(0deg);
+            /* Position the figure to stand on the flat line */
+            transform: translateY(-2px);
           }
 
           @keyframes climb {
@@ -51,38 +52,37 @@ export default function LoadingSpinner({
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         className="text-primary-500"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
         {/* The Ladder */}
         <path
           className={clsx('ladder', !loading && 'stopped')}
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
           d="M 12,2 V 22"
         />
         <path
           className={clsx('ladder', !loading && 'stopped')}
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
           d="M 8,2 V 22"
         />
         <path
           className={clsx('ladder', !loading && 'stopped')}
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
           d="M 16,2 V 22"
         />
 
-        {/* The Box */}
-        <g className={clsx('box', !loading && 'stopped')}>
-          <rect x="9" y="18" width="6" height="6" fill="currentColor" rx="1"/>
+        {/* The Human Figure */}
+        <g className={clsx('climber', !loading && 'stopped')}>
+          <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+          <path d="M12 19.5V22.5" />
+          <path d="M10 20.5L14 20.5" />
+          <path d="M12 22.5L10 24" />
+          <path d="M12 22.5L14 24" />
         </g>
         
         {/* The flat line when stopped */}
         {!loading && (
-           <line x1="4" y1="22" x2="20" y2="22" stroke="currentColor" strokeWidth="1" />
+           <line x1="4" y1="22" x2="20" y2="22" />
         )}
       </svg>
     </div>
