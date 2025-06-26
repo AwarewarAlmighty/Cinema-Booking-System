@@ -6,12 +6,12 @@ interface LoadingSpinnerProps {
   loading?: boolean; // New prop to control the animation
 }
 
-export default function LoadingSpinner({ 
-  size = 'md', 
+export default function LoadingSpinner({
+  size = 'md',
   className,
   loading = true // Default to true for existing usage
 }: LoadingSpinnerProps) {
-  
+
   const sizeClasses = {
     sm: 'h-10 w-10',
     md: 'h-14 w-14',
@@ -29,24 +29,47 @@ export default function LoadingSpinner({
           .ladder-part.stopped {
             opacity: 0;
           }
+
+          .climber-group {
+            animation: climb-group 2s linear infinite;
+          }
           
-          .climber {
-            transform-origin: 50% 100%; /* bottom center */
-            animation: climb 2.5s linear infinite;
+          .climber.stopped .climber-group,
+          .climber.stopped .left-arm,
+          .climber.stopped .right-arm,
+          .climber.stopped .left-leg,
+          .climber.stopped .right-leg {
+            animation: none;
           }
           .climber.stopped {
-            animation: none;
-            transform: translateY(-2px); /* Position the figure to stand on the flat line */
+             transform: translateY(-2px); /* Final standing position */
           }
 
-          @keyframes climb {
-            0% {
-              transform: translateY(0px);
-            }
-            100% {
-              /* Move the climber up the height of the SVG viewbox */
-              transform: translateY(-24px);
-            }
+          .left-arm {
+             animation: climb-left-arm 1s ease-in-out infinite alternate;
+          }
+          .right-leg {
+            animation: climb-left-arm 1s ease-in-out infinite alternate;
+          }
+          .right-arm {
+            animation: climb-right-arm 1s ease-in-out infinite alternate;
+          }
+           .left-leg {
+             animation: climb-right-arm 1s ease-in-out infinite alternate;
+          }
+
+          @keyframes climb-group {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-24px); }
+          }
+
+          @keyframes climb-left-arm {
+            from { transform: translateY(-2px); }
+            to { transform: translateY(0); }
+          }
+           @keyframes climb-right-arm {
+            from { transform: translateY(0); }
+            to { transform: translateY(-2px); }
           }
 
           .ground-line {
@@ -78,16 +101,21 @@ export default function LoadingSpinner({
             <path d="M 8 6 H 16" />
         </g>
 
-        {/* The Human Figure */}
+        {/* The Human Figure, broken into parts for animation */}
         <g className={clsx('climber', !loading && 'stopped')}>
-            {/* The a simplified human figure for better scaling */}
-            <circle cx="12" cy="17.5" r="1.5" fill="currentColor"/>
-            <path d="M12 19V22" />
-            <path d="M9 19.5L15 19.5" />
-            <path d="M12 22L10 24" />
-            <path d="M12 22L14 24" />
+            <g className="climber-group">
+                {/* Body and Head */}
+                <circle cx="12" cy="17.5" r="1.5" fill="currentColor"/>
+                <path d="M12 19V21" />
+                {/* Arms */}
+                <path className="left-arm" d="M12 19.5L10 20.5" />
+                <path className="right-arm" d="M12 19.5L14 20.5" />
+                {/* Legs */}
+                <path className="left-leg" d="M12 21L10 22.5" />
+                <path className="right-leg" d="M12 21L14 22.5" />
+            </g>
         </g>
-        
+
         {/* The flat line when stopped */}
         <line
            x1="4" y1="22" x2="20" y2="22"
