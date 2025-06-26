@@ -13,37 +13,48 @@ export default function LoadingSpinner({
 }: LoadingSpinnerProps) {
   
   const sizeClasses = {
-    sm: 'h-8 w-8',
-    md: 'h-12 w-12',
-    lg: 'h-16 h-16',
+    sm: 'h-10 w-10',
+    md: 'h-14 w-14',
+    lg: 'h-20 w-20',
   };
 
   return (
     <div className={clsx('relative', sizeClasses[size], className)}>
       <style>
         {`
-          .ladder {
-            stroke-dasharray: 200;
-            stroke-dashoffset: 0;
-            transition: stroke-dashoffset 0.5s ease-out;
+          .ladder-part {
+            transition: opacity 0.4s ease-in-out;
+            opacity: 1;
           }
-          .ladder.stopped {
-            stroke-dashoffset: 200;
+          .ladder-part.stopped {
+            opacity: 0;
           }
           
           .climber {
-            transform-origin: bottom center;
-            animation: climb 1.5s infinite steps(4);
+            transform-origin: 50% 100%; /* bottom center */
+            animation: climb 2.5s linear infinite;
           }
           .climber.stopped {
             animation: none;
-            /* Position the figure to stand on the flat line */
-            transform: translateY(-2px);
+            transform: translateY(-2px); /* Position the figure to stand on the flat line */
           }
 
           @keyframes climb {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-100%); }
+            0% {
+              transform: translateY(0px);
+            }
+            100% {
+              /* Move the climber up the height of the SVG viewbox */
+              transform: translateY(-24px);
+            }
+          }
+
+          .ground-line {
+            opacity: 0;
+            transition: opacity 0.4s 0.2s ease-in-out; /* Add a slight delay */
+          }
+          .ground-line.stopped {
+            opacity: 1;
           }
         `}
       </style>
@@ -53,37 +64,35 @@ export default function LoadingSpinner({
         fill="none"
         className="text-primary-500"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {/* The Ladder */}
-        <path
-          className={clsx('ladder', !loading && 'stopped')}
-          d="M 12,2 V 22"
-        />
-        <path
-          className={clsx('ladder', !loading && 'stopped')}
-          d="M 8,2 V 22"
-        />
-        <path
-          className={clsx('ladder', !loading && 'stopped')}
-          d="M 16,2 V 22"
-        />
+        {/* The Ladder with rungs */}
+        <g className={clsx('ladder-part', !loading && 'stopped')}>
+            <path d="M 8 2 V 22" />
+            <path d="M 16 2 V 22" />
+            <path d="M 8 18 H 16" />
+            <path d="M 8 14 H 16" />
+            <path d="M 8 10 H 16" />
+            <path d="M 8 6 H 16" />
+        </g>
 
         {/* The Human Figure */}
         <g className={clsx('climber', !loading && 'stopped')}>
-          <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
-          <path d="M12 19.5V22.5" />
-          <path d="M10 20.5L14 20.5" />
-          <path d="M12 22.5L10 24" />
-          <path d="M12 22.5L14 24" />
+            {/* The a simplified human figure for better scaling */}
+            <circle cx="12" cy="17.5" r="1.5" fill="currentColor"/>
+            <path d="M12 19V22" />
+            <path d="M9 19.5L15 19.5" />
+            <path d="M12 22L10 24" />
+            <path d="M12 22L14 24" />
         </g>
         
         {/* The flat line when stopped */}
-        {!loading && (
-           <line x1="4" y1="22" x2="20" y2="22" />
-        )}
+        <line
+           x1="4" y1="22" x2="20" y2="22"
+           className={clsx('ground-line', !loading && 'stopped')}
+        />
       </svg>
     </div>
   );
