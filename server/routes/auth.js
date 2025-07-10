@@ -1,10 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
 const router = express.Router();
 
-// ... (The existing '/register' route remains the same) ...
+// Initialize the Google client with your Client ID from the .env file
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 router.post('/register', async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -27,7 +30,6 @@ router.post('/register', async (req, res) => {
 });
 
 
-// ROUTE for REGULAR user login (by email)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,26 +49,57 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// ROUTE for Google Sign-In
+router.post('/google-login', async (req, res) => {
+    const { credential } = req.body;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
 
-// --- ✅ NEW: Route for ADMIN login (by username) ---
+        const payload = ticket.getPayload();
+        const { name, email } = payload;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            const dummyPassword = email + process.env.JWT_SECRET;
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash(dummyPassword, salt);
+            
+            user = new User({
+                fullName: name,
+                email: email,
+                passwordHash: passwordHash,
+                role: 'user',
+            });
+            await user.save();
+        }
+        
+        const userResponse = { id: user._id, fullName: user.fullName, email: user.email, role: user.role };
+        res.status(200).json({ message: 'Google login successful.', user: userResponse });
+
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(401).json({ message: 'Invalid Google token or login failed.' });
+    }
+});
+
 router.post('/admin-login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // 1. Find the user by their username
         const user = await User.findOne({ username });
         if (!user || user.role !== 'admin') {
-            // User not found or is not an admin
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
-        // 2. Compare the password with the stored hash
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid username or password.' });
         }
 
-        // 3. Admin login is successful
         const userResponse = {
             id: user._id,
             fullName: user.fullName,
@@ -84,6 +117,5 @@ router.post('/admin-login', async (req, res) => {
         res.status(500).json({ message: 'Server error during admin login.' });
     }
 });
-
 
 module.exports = router;

@@ -21,6 +21,7 @@ export default function BookingPage() {
   const [showtimes, setShowtimes] = useState<IShowtime[]>([]);
   const [selectedShowtime, setSelectedShowtime] = useState<IShowtime | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [occupiedSeats, setOccupiedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,12 @@ export default function BookingPage() {
       fetchMovieAndShowtimes(movieId);
     }
   }, [movieId]);
+
+  useEffect(() => {
+    if (selectedShowtime) {
+      fetchOccupiedSeats(selectedShowtime._id);
+    }
+  }, [selectedShowtime]);
 
   const fetchMovieAndShowtimes = async (id: string) => {
     try {
@@ -52,6 +59,20 @@ export default function BookingPage() {
     }
   };
 
+  const fetchOccupiedSeats = async (showtimeId: string) => {
+    try {
+      const response = await fetch(`/api/bookings/showtime/${showtimeId}`);
+      if (!response.ok) {
+        throw new Error('Could not fetch seat status');
+      }
+      const data = await response.json();
+      setOccupiedSeats(data);
+    } catch (error) {
+      console.error("Error fetching occupied seats:", error);
+      toast.error("Could not load seat information.");
+    }
+  };
+
   const generateSeats = () => {
     const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     const seatsPerRow = 10;
@@ -60,7 +81,7 @@ export default function BookingPage() {
     for (const row of rows) {
       for (let i = 1; i <= seatsPerRow; i++) {
         const seatId = `${row}${i}`;
-        const isOccupied = false; 
+        const isOccupied = occupiedSeats.includes(seatId);
         seats.push({
           id: seatId,
           isOccupied,
@@ -72,6 +93,8 @@ export default function BookingPage() {
   };
 
   const handleSeatClick = (seatId: string) => {
+    if (occupiedSeats.includes(seatId)) return;
+
     setSelectedSeats(prev => 
       prev.includes(seatId) 
         ? prev.filter(s => s !== seatId) 
@@ -150,11 +173,23 @@ export default function BookingPage() {
                     <button
                       key={seat.id}
                       onClick={() => handleSeatClick(seat.id)}
-                      className={`seat ${selectedSeats.includes(seat.id) ? 'seat-selected' : 'seat-available'}`}
+                      disabled={seat.isOccupied}
+                      className={`seat ${
+                        seat.isOccupied
+                          ? 'seat-occupied'
+                          : selectedSeats.includes(seat.id)
+                          ? 'seat-selected'
+                          : 'seat-available'
+                      }`}
                     >
                       {seat.id}
                     </button>
                   ))}
+              </div>
+               <div className="flex justify-center space-x-6">
+                  <div className="flex items-center space-x-2"><div className="seat seat-available w-4 h-4"></div><span className="text-sm">Available</span></div>
+                  <div className="flex items-center space-x-2"><div className="seat seat-selected w-4 h-4"></div><span className="text-sm">Selected</span></div>
+                  <div className="flex items-center space-x-2"><div className="seat seat-occupied w-4 h-4"></div><span className="text-sm">Occupied</span></div>
               </div>
             </div>
 

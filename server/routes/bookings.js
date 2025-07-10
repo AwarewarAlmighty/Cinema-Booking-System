@@ -21,8 +21,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// --- NEW ROUTE: GET /api/bookings/user/:userId ---
-// Fetches all bookings for a specific user
+// GET all bookings for a specific user
 router.get('/user/:userId', async (req, res) => {
     try {
         const bookings = await Booking.find({ user: req.params.userId })
@@ -58,6 +57,26 @@ router.get('/:id', async (req, res) => {
         res.status(200).json(booking);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching booking.' });
+    }
+});
+
+// GET all booked seats for a specific showtime
+router.get('/showtime/:showtimeId', async (req, res) => {
+    try {
+        // Find bookings for the showtime that are NOT cancelled
+        const bookings = await Booking.find({ 
+            showtime: req.params.showtimeId,
+            status: { $ne: 'cancelled' } 
+        });
+        
+        // Aggregate the selected seats from the active bookings
+        const bookedSeats = bookings.reduce((acc, booking) => {
+            return acc.concat(booking.selected_seats);
+        }, []);
+
+        res.status(200).json(bookedSeats);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error fetching booked seats.' });
     }
 });
 

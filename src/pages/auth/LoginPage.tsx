@@ -1,48 +1,49 @@
-import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { Film, Eye, EyeOff } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { Film, Eye, EyeOff } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 interface LoginForm {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { signIn, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  const from = location.state?.from?.pathname || '/'
+  const from = location.state?.from?.pathname || '/';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>()
+  } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const { error } = await signIn(data.email, data.password)
+      const { error } = await signIn(data.email, data.password);
       
       if (error) {
-        toast.error('Invalid email or password')
+        toast.error('Invalid email or password');
       } else {
-        toast.success('Welcome back!')
-        navigate(from, { replace: true })
+        toast.success('Welcome back!');
+        navigate(from, { replace: true });
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -127,7 +128,37 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center space-y-2">
+          <div className="flex items-center justify-center my-4">
+            <span className="h-px bg-slate-600 w-full"></span>
+            <span className="mx-4 text-slate-500">OR</span>
+            <span className="h-px bg-slate-600 w-full"></span>
+          </div>
+        
+          <div className="flex justify-center">
+              <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                      if (credentialResponse.credential) {
+                          setLoading(true);
+                          const { error } = await signInWithGoogle(credentialResponse.credential);
+                          if (error) {
+                              toast.error('Google sign-in failed.');
+                          } else {
+                              toast.success('Welcome back!');
+                              navigate(from, { replace: true });
+                          }
+                          setLoading(false);
+                      }
+                  }}
+                  onError={() => {
+                      toast.error('Google login failed.');
+                  }}
+                  theme="filled_black"
+                  text="signin_with"
+                  shape="rectangular"
+              />
+          </div>
+
+          <div className="text-center space-y-2 mt-6">
             <p className="text-slate-400">
               Don't have an account?{' '}
               <Link to="/register" className="text-primary-400 hover:text-primary-300 font-medium">
@@ -143,5 +174,5 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

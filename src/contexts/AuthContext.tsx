@@ -6,8 +6,7 @@ interface AuthUser {
   email?: string;
   username?: string;
   fullName?: string;
-  role?: 'user' | 'admin'; // Changed: role is a direct property
-  // The user_metadata property is no longer needed here based on our backend
+  role?: 'user' | 'admin';
 }
 
 // Define the types for the context value
@@ -19,6 +18,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   adminSignIn: (username: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: (credential: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -105,6 +105,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('loggedInUser');
   };
 
+  const signInWithGoogle = async (credential: string) => {
+    try {
+      const response = await fetch('/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Google sign-in failed');
+      }
+
+      setUser(data.user);
+      localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
 
   const isAdmin = user?.role === 'admin';
 
@@ -116,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     adminSignIn,
+    signInWithGoogle,
   };
 
   return (

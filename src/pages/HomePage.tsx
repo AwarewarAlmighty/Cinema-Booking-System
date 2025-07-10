@@ -1,41 +1,43 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Play, Star, Ticket } from 'lucide-react'
-import { Movie, IMovie } from '@/lib/mongodb'
-import MovieCard from '@/components/MovieCard'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Play, Star, Ticket } from 'lucide-react';
+import { IMovie } from '@/lib/mongodb';
+import MovieCard from '@/components/MovieCard';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function HomePage() {
-  const [movies, setMovies] = useState<IMovie[]>([])
-  const [loading, setLoading] = useState(true)
-  const [featuredMovie, setFeaturedMovie] = useState<IMovie | null>(null)
+  const [movies, setMovies] = useState<IMovie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [featuredMovie, setFeaturedMovie] = useState<IMovie | null>(null);
 
   useEffect(() => {
-    fetchMovies()
-  }, [])
+    fetchMovies();
+  }, []);
+
   const fetchMovies = async () => {
     try {
       const response = await fetch('/api/movies');
       const data = await response.json();
 
-
-      setMovies(data || [])
+      setMovies(data || []);
       if (data && data.length > 0) {
-        setFeaturedMovie(data[0])
+        // Use a random movie for the hero section for variety
+        const randomIndex = Math.floor(Math.random() * data.length);
+        setFeaturedMovie(data[randomIndex]);
       }
     } catch (error) {
-      console.error('Error fetching movies:', error)
+      console.error('Error fetching movies:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   return (
@@ -67,7 +69,7 @@ export default function HomePage() {
                 <Ticket className="h-5 w-5 mr-2" />
                 Book Now
               </Link>
-              <Link to={`/movies/${featuredMovie.movie_id}`} className="btn btn-secondary text-lg px-8 py-3">
+              <Link to={`/movie/${featuredMovie._id}`} className="btn btn-secondary text-lg px-8 py-3">
                 <Play className="h-5 w-5 mr-2" />
                 Watch Trailer
               </Link>
@@ -92,8 +94,9 @@ export default function HomePage() {
           {movies.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                {/* The fix is here: using movie._id as the key */}
                 {movies.map((movie) => (
-                  <MovieCard key={movie.movie_id} movie={movie} />
+                  <MovieCard key={movie._id} movie={movie} />
                 ))}
               </div>
               
@@ -110,49 +113,6 @@ export default function HomePage() {
           )}
         </div>
       </section>
-
-      {/* Features Section */}
-      <section className="py-16 bg-dark-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              Why Choose <span className="text-gradient">Cinema Indonesia</span>
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-primary-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Premium Experience</h3>
-              <p className="text-slate-400">
-                State-of-the-art sound systems and crystal-clear projection for the ultimate viewing experience.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-accent-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Ticket className="h-8 w-8 text-accent-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Booking</h3>
-              <p className="text-slate-400">
-                Simple and secure online booking system. Reserve your seats in just a few clicks.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Play className="h-8 w-8 text-green-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Latest Movies</h3>
-              <p className="text-slate-400">
-                Always up-to-date with the latest releases and blockbuster movies from around the world.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
-  )
+  );
 }
