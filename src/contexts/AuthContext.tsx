@@ -1,38 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
 
-// Mock data that would conceptually be in local JSON files
-const mockUsers = [
-  {
-    id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
-    email: 'user@example.com',
-    password: 'password123',
-    user_metadata: {
-      full_name: 'John Doe',
-      role: 'user',
-    },
-  },
-];
-
-const mockAdmins = [
-  {
-    id: 'fedcba09-8765-4321-0987-654321fedcba',
-    username: 'admin',
-    password: 'password',
-    user_metadata: {
-      full_name: 'Admin User',
-      role: 'admin',
-    },
-  },
-];
-
-interface AuthUser extends User {
-  user_metadata?: {
-    full_name?: string;
-    role?: 'user' | 'admin';
-  };
+// Define the shape of the user object that will be stored in the context state
+interface AuthUser {
+  id: string;
+  email?: string;
+  username?: string;
+  fullName?: string;
+  role?: 'user' | 'admin'; // Changed: role is a direct property
+  // The user_metadata property is no longer needed here based on our backend
 }
 
+// Define the types for the context value
 interface AuthContextType {
   user: AuthUser | null;
   isAdmin: boolean;
@@ -49,51 +27,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // On initial load, try to get the user from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedUser = localStorage.getItem('loggedInUser');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      localStorage.removeItem('loggedInUser');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const foundUser = mockUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      const sessionUser = { ...foundUser, aud: 'authenticated' } as AuthUser;
-      setUser(sessionUser);
-      localStorage.setItem('loggedInUser', JSON.stringify(sessionUser));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+      setUser(data.user);
+      localStorage.setItem('loggedInUser', JSON.stringify(data.user));
       return { error: null };
+    } catch (error: any) {
+      return { error };
     }
+  };
 
-    return { error: { message: 'Invalid credentials' } };
+  const adminSignIn = async (username: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid admin credentials');
+      }
+      setUser(data.user);
+      localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const existingUser = mockUsers.find((u) => u.email === email);
-    if (existingUser) {
-      return { error: { message: 'User with this email already exists' } };
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+      return { error: null };
+    } catch (error: any) {
+      if (error.message.includes("Unexpected end of JSON input")) {
+        return { error: null };
+      }
+      return { error };
     }
-
-    const newUser = {
-      id: crypto.randomUUID(),
-      email,
-      password,
-      user_metadata: {
-        full_name: fullName,
-        role: 'user',
-      },
-    };
-
-    mockUsers.push(newUser);
-    const sessionUser = { ...newUser, aud: 'authenticated' } as AuthUser;
-    setUser(sessionUser);
-    localStorage.setItem('loggedInUser', JSON.stringify(sessionUser));
-    
-    return { error: null };
   };
 
   const signOut = async () => {
@@ -101,26 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('loggedInUser');
   };
 
-  const adminSignIn = async (username: string, password: string) => {
-    const foundAdmin = mockAdmins.find(
-      (a) => a.username === username && a.password === password
-    );
 
-    if (foundAdmin) {
-      const sessionUser = {
-        id: foundAdmin.id,
-        user_metadata: foundAdmin.user_metadata,
-        aud: 'authenticated',
-      } as AuthUser;
-      setUser(sessionUser);
-      localStorage.setItem('loggedInUser', JSON.stringify(sessionUser));
-      return { error: null };
-    }
-
-    return { error: { message: 'Invalid admin credentials' } };
-  };
-
-  const isAdmin = user?.user_metadata?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
   const value = {
     user,
@@ -139,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Custom hook for easy access to the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

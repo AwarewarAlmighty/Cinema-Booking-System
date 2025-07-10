@@ -1,29 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Play, Star, Ticket } from 'lucide-react'
-import { supabase, type Movie } from '@/lib/supabase'
+import { Movie, IMovie } from '@/lib/mongodb'
 import MovieCard from '@/components/MovieCard'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function HomePage() {
-  const [movies, setMovies] = useState<Movie[]>([])
+  const [movies, setMovies] = useState<IMovie[]>([])
   const [loading, setLoading] = useState(true)
-  const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null)
+  const [featuredMovie, setFeaturedMovie] = useState<IMovie | null>(null)
 
   useEffect(() => {
     fetchMovies()
   }, [])
-
   const fetchMovies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('movies')
-        .select('*')
-        .lte('release_date', new Date().toISOString().split('T')[0])
-        .order('release_date', { ascending: false })
-        .limit(8)
+      const response = await fetch('/api/movies/now-showing');
+      const data = await response.json();
 
-      if (error) throw error
 
       setMovies(data || [])
       if (data && data.length > 0) {

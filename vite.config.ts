@@ -9,4 +9,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // --- Add the proxy configuration ---
+  server: {
+    proxy: {
+      // All requests starting with /api will be redirected to the backend
+      '/api': {
+        target: 'http://localhost:5000', // Your backend server's address
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
