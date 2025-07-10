@@ -1,7 +1,6 @@
-// src/components/EditMovieForm.tsx
+'''// src/components/EditMovieForm.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
 export default function EditMovieForm() {
@@ -20,22 +19,20 @@ export default function EditMovieForm() {
 
   useEffect(() => {
     const fetchMovie = async () => {
-      const { data, error } = await supabase
-        .from('movies')
-        .select('*')
-        .eq('movie_id', id)
-        .single();
-
-      if (error) {
+      try {
+        const response = await fetch(`/api/movies/${id}`);
+        if (!response.ok) {
+          throw new Error('Movie not found');
+        }
+        const data = await response.json();
+        setForm({
+          ...data,
+          duration: String(data.duration),
+          release_date: data.release_date.slice(0, 10), // format YYYY-MM-DD
+        });
+      } catch (error) {
         toast.error('Movie not found');
-        return;
       }
-
-      setForm({
-        ...data,
-        duration: String(data.duration),
-        release_date: data.release_date.slice(0, 10), // format YYYY-MM-DD
-      });
     };
 
     fetchMovie();
@@ -50,18 +47,28 @@ export default function EditMovieForm() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase
-      .from('movies')
-      .update({ ...form, duration: parseInt(form.duration) })
-      .eq('movie_id', id);
+    try {
+      const response = await fetch(`/api/movies/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...form,
+          duration: parseInt(form.duration),
+        }),
+      });
 
-    setLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to update movie');
+      }
 
-    if (error) {
-      toast.error('Failed to update movie');
-    } else {
       toast.success('Movie updated successfully');
       navigate('/admin/movies');
+    } catch (error) {
+      toast.error('Failed to update movie');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,3 +105,4 @@ function Textarea({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextArea
     </div>
   );
 }
+''

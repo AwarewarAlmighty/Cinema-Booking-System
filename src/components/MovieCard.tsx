@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom'
-import { Clock, Calendar } from 'lucide-react'
-import type { Movie } from '@/lib/supabase'
+import { Link } from 'react-router-dom';
+import { Clock, Calendar } from 'lucide-react';
+import type { IMovie } from '@/lib/mongodb'; // Changed to import from mongodb
 
 interface MovieCardProps {
-  movie: Movie
+  movie: IMovie; // Changed to use the IMovie interface
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
@@ -34,12 +34,12 @@ export default function MovieCard({ movie }: MovieCardProps) {
           {movie.description}
         </p>
         <Link
-          to={`/movies/${movie.movie_id}`}
+          to={`/movies/${movie._id}`} // Changed to use _id
           className="btn btn-primary w-full"
         >
           View Details
         </Link>
       </div>
     </div>
-  )
+  );
 }

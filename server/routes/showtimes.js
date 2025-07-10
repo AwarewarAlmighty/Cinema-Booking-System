@@ -7,12 +7,40 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const showtimes = await Showtime.find()
-            .populate('movie') // Replaces the movie ID with the full movie document
-            .populate('hall')   // Replaces the hall ID with the full hall document
+            .populate('movie')
+            .populate('hall')
             .sort({ show_date: -1, start_time: 1 });
         res.status(200).json(showtimes);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching showtimes.' });
+    }
+});
+
+// --- NEW ROUTE: GET /api/showtimes/:id ---
+// Fetches a single showtime by its ID
+router.get('/:id', async (req, res) => {
+    try {
+        const showtime = await Showtime.findById(req.params.id)
+            .populate('movie')
+            .populate('hall');
+        if (!showtime) {
+            return res.status(404).json({ message: 'Showtime not found' });
+        }
+        res.status(200).json(showtime);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error fetching showtime.' });
+    }
+});
+
+// GET all showtimes for a specific movie
+router.get('/movie/:movieId', async (req, res) => {
+    try {
+        const showtimes = await Showtime.find({ movie: req.params.movieId })
+            .populate('hall')
+            .sort({ show_date: 1, start_time: 1 });
+        res.status(200).json(showtimes);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error while fetching showtimes for the movie.' });
     }
 });
 

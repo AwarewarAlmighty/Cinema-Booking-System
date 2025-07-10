@@ -1,7 +1,6 @@
 // src/components/AddMovieForm.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
 export default function AddMovieForm() {
@@ -33,19 +32,29 @@ export default function AddMovieForm() {
 
     setLoading(true);
 
-    const { error } = await supabase.from('movies').insert({
-      ...form,
-      duration: parseInt(form.duration),
-    });
+    try {
+      const response = await fetch('/api/movies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...form,
+          duration: parseInt(form.duration),
+        }),
+      });
 
-    setLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to add movie');
+      }
 
-    if (error) {
-      toast.error('Failed to add movie');
-      console.error('Error fetching movies:', error)
-    } else {
       toast.success('Movie added successfully');
       navigate('/admin/movies');
+    } catch (error) {
+      toast.error('Failed to add movie');
+      console.error('Error adding movie:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

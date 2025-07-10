@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
     "bcrypt": "^6.0.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",

@@ -1,33 +1,34 @@
-import { Routes, Route } from 'react-router-dom'
-import { useAuth } from './contexts/AuthContext'
-import Layout from './components/Layout'
-import AdminLayout from './components/admin/AdminLayout'
-import ProtectedRoute from './components/ProtectedRoute'
+import { Routes, Route } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import Layout from './components/Layout';
+import AdminLayout from './components/admin/AdminLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Public pages
-import HomePage from './pages/HomePage'
-import MoviesPage from './pages/MoviesPage'
-import MovieDetailsPage from './pages/MovieDetailsPage'
-import LoginPage from './pages/auth/LoginPage'
-import RegisterPage from './pages/auth/RegisterPage'
+import HomePage from './pages/HomePage';
+import MoviesPage from './pages/MoviesPage';
+import MovieDetailsPage from './pages/MovieDetailsPage';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 
 // User pages
-import BookingsPage from './pages/user/BookingsPage'
-import BookingDetailsPage from './pages/user/BookingDetailsPage'
-import SeatSelectionPage from './pages/user/SeatSelectionPage'
-import PaymentPage from './pages/user/PaymentPage'
-import BookingConfirmationPage from './pages/user/BookingConfirmationPage'
+import BookingsPage from './pages/user/BookingsPage';
+import BookingDetailsPage from './pages/user/BookingDetailsPage';
+import SeatSelectionPage from './pages/user/SeatSelectionPage';
+import PaymentPage from './pages/user/PaymentPage';
+import BookingConfirmationPage from './pages/user/BookingConfirmationPage';
 
 // Admin pages
-import AdminLoginPage from './pages/admin/AdminLoginPage'
-import AdminDashboardPage from './pages/admin/AdminDashboardPage'
-import AdminMoviesPage from './pages/admin/AdminMoviesPage'
-import AdminHallsPage from './pages/admin/AdminHallsPage'
-import AdminShowtimesPage from './pages/admin/AdminShowtimesPage'
-import AdminBookingsPage from './pages/admin/AdminBookingsPage'
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminMoviesPage from './pages/admin/AdminMoviesPage';
+import AdminHallsPage from './pages/admin/AdminHallsPage';
+import AdminShowtimesPage from './pages/admin/AdminShowtimesPage';
+import AdminBookingsPage from './pages/admin/AdminBookingsPage';
+import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage'; // Import the new page
 
 function App() {
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth();
 
   return (
     <Routes>
@@ -79,9 +80,10 @@ function App() {
         <Route path="halls" element={<AdminHallsPage />} />
         <Route path="showtimes" element={<AdminShowtimesPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
+        <Route path="bookings/:id" element={<AdminBookingDetailsPage />} /> {/* Add this new route */}
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

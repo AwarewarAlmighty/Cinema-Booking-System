@@ -1,9 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Eye, CheckCircle, XCircle, Filter, Download } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Import Link
+import { Eye, CheckCircle, XCircle, Download } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
-// Define interfaces to match the populated data structure from your backend
+// ... (keep the existing interfaces)
+
+export interface IBooking {
+  _id: string;
+  user: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  showtime: IShowtime;
+  booking_date: string;
+  total_seats: number;
+  total_amount: number;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  selected_seats: string[];
+}
 export interface IMovie {
   _id: string;
   title: string;
@@ -11,7 +27,7 @@ export interface IMovie {
 }
 
 export interface IHall {
-  _id: string;
+  _id:string;
   hall_name: string;
 }
 
@@ -23,17 +39,6 @@ export interface IShowtime {
   start_time: string;
 }
 
-export interface IBooking {
-  _id: string;
-  showtime: IShowtime;
-  booking_date: string;
-  total_seats: number;
-  total_amount: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  selected_seats: string[];
-}
-
-// ============== AdminBookingsPage Component ==============
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<IBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +48,6 @@ export default function AdminBookingsPage() {
     fetchBookings();
   }, []);
 
-  // Fetch all bookings from the backend API
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -61,7 +65,6 @@ export default function AdminBookingsPage() {
     }
   };
 
-  // Update the status of a specific booking
   const handleUpdateBookingStatus = async (bookingId: string, status: 'confirmed' | 'cancelled') => {
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
@@ -75,7 +78,7 @@ export default function AdminBookingsPage() {
       }
 
       toast.success(`Booking ${status} successfully`);
-      fetchBookings(); // Refresh the list after updating
+      fetchBookings();
     } catch (error) {
       toast.error('Failed to update booking status');
       console.error('Error updating booking status:', error);
@@ -205,7 +208,9 @@ export default function AdminBookingsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button className="text-blue-400 hover:text-blue-300"><Eye className="h-4 w-4" /></button>
+                        <Link to={`/admin/bookings/${booking._id}`} className="text-blue-400 hover:text-blue-300">
+                          <Eye className="h-4 w-4" />
+                        </Link>
                         {booking.status === 'pending' && (
                           <>
                             <button onClick={() => handleUpdateBookingStatus(booking._id, 'confirmed')} className="text-green-400 hover:text-green-300">

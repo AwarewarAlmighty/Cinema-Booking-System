@@ -1,70 +1,69 @@
-import { useEffect, useState } from 'react'
-import { Search, Filter } from 'lucide-react'
-import { supabase, type Movie } from '@/lib/supabase'
-import MovieCard from '@/components/MovieCard'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react';
+import { Search, Filter } from 'lucide-react';
+import { IMovie } from '@/lib/mongodb'; // Corrected import
+import MovieCard from '@/components/MovieCard';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function MoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedGenre, setSelectedGenre] = useState('')
-  const [genres, setGenres] = useState<string[]>([])
+  const [movies, setMovies] = useState<IMovie[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<IMovie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchMovies()
-  }, [])
+    fetchMovies();
+  }, []);
 
   useEffect(() => {
-    filterMovies()
-  }, [movies, searchTerm, selectedGenre])
+    filterMovies();
+  }, [movies, searchTerm, selectedGenre]);
 
   const fetchMovies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('movies')
-        .select('*')
-        .lte('release_date', new Date().toISOString().split('T')[0])
-        .order('release_date', { ascending: false })
+      // Fetches movies from the Express API endpoint which connects to MongoDB
+      const response = await fetch('/api/movies');
+      if (!response.ok) {
+        throw new Error('Failed to fetch movies');
+      }
+      const data = await response.json();
 
-      if (error) throw error
-
-      setMovies(data || [])
+      setMovies(data || []);
       
       // Extract unique genres
-      const uniqueGenres = [...new Set(data?.map(movie => movie.genre).filter(Boolean) || [])]
-      setGenres(uniqueGenres)
+      const uniqueGenres = [...new Set(data?.map((movie: IMovie) => movie.genre).filter(Boolean) || [])];
+      setGenres(uniqueGenres);
     } catch (error) {
-      console.error('Error fetching movies:', error)
+      console.error('Error fetching movies:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filterMovies = () => {
-    let filtered = movies
+    let filtered = movies;
 
     if (searchTerm) {
       filtered = filtered.filter(movie =>
         movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         movie.description.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      );
     }
 
     if (selectedGenre) {
-      filtered = filtered.filter(movie => movie.genre === selectedGenre)
+      filtered = filtered.filter(movie => movie.genre === selectedGenre);
     }
 
-    setFilteredMovies(filtered)
-  }
+    setFilteredMovies(filtered);
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   return (
@@ -113,7 +112,7 @@ export default function MoviesPage() {
         {filteredMovies.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredMovies.map((movie) => (
-              <MovieCard key={movie.movie_id} movie={movie} />
+              <MovieCard key={movie._id} movie={movie} />
             ))}
           </div>
         ) : (
@@ -128,5 +127,5 @@ export default function MoviesPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

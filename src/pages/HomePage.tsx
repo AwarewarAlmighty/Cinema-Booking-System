@@ -15,7 +15,7 @@ export default function HomePage() {
   }, [])
   const fetchMovies = async () => {
     try {
-      const response = await fetch('/api/movies/now-showing');
+      const response = await fetch('/api/movies');
       const data = await response.json();
 
 

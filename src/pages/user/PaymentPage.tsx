@@ -1,36 +1,35 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { CreditCard, Calendar, Clock, MapPin, Users } from 'lucide-react'
-import { supabase, type Movie, type Showtime } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { IMovie, IShowtime } from '@/lib/mongodb';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 interface PaymentForm {
-  cardNumber: string
-  expiryDate: string
-  cvv: string
-  cardHolder: string
-  paymentMethod: 'credit_card' | 'debit_card' | 'paypal'
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
+  cardHolder: string;
+  paymentMethod: 'credit_card' | 'debit_card' | 'paypal';
 }
 
 interface SeatSelectionData {
-  movieId: string
-  showtimeId: string
-  selectedSeats: string[]
-  totalAmount: number
+  movieId: string;
+  showtimeId: string;
+  selectedSeats: string[];
+  totalAmount: number;
 }
 
 export default function PaymentPage() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [bookingData, setBookingData] = useState<{
-    movie: Movie
-    showtime: Showtime
-    selection: SeatSelectionData
-  } | null>(null)
+    movie: IMovie;
+    showtime: IShowtime;
+    selection: SeatSelectionData;
+  } | null>(null);
 
   const {
     register,
@@ -40,119 +39,94 @@ export default function PaymentPage() {
     defaultValues: {
       paymentMethod: 'credit_card'
     }
-  })
+  });
 
   useEffect(() => {
-    loadBookingData()
-  }, [])
+    loadBookingData();
+  }, []);
 
   const loadBookingData = async () => {
     try {
-      const selectionData = sessionStorage.getItem('seatSelection')
+      const selectionData = sessionStorage.getItem('seatSelection');
       if (!selectionData) {
-        toast.error('No booking data found')
-        navigate('/movies')
-        return
+        toast.error('No booking data found');
+        navigate('/movies');
+        return;
       }
 
-      const selection: SeatSelectionData = JSON.parse(selectionData)
+      const selection: SeatSelectionData = JSON.parse(selectionData);
 
-      // Fetch movie and showtime details
       const [movieResponse, showtimeResponse] = await Promise.all([
-        supabase
-          .from('movies')
-          .select('*')
-          .eq('movie_id', selection.movieId)
-          .single(),
-        supabase
-          .from('showtimes')
-          .select(`
-            *,
-            hall:halls(*)
-          `)
-          .eq('showtime_id', selection.showtimeId)
-          .single()
-      ])
+        fetch(`/api/movies/${selection.movieId}`),
+        fetch(`/api/showtimes/${selection.showtimeId}`)
+      ]);
 
-      if (movieResponse.error) throw movieResponse.error
-      if (showtimeResponse.error) throw showtimeResponse.error
+      if (!movieResponse.ok) throw new Error('Movie not found');
+      if (!showtimeResponse.ok) throw new Error('Showtime not found');
+
+      const movieData = await movieResponse.json();
+      const showtimeData = await showtimeResponse.json();
 
       setBookingData({
-        movie: movieResponse.data,
-        showtime: showtimeResponse.data,
+        movie: movieData,
+        showtime: showtimeData,
         selection
-      })
+      });
     } catch (error) {
-      console.error('Error loading booking data:', error)
-      toast.error('Failed to load booking data')
-      navigate('/movies')
+      console.error('Error loading booking data:', error);
+      toast.error('Failed to load booking data');
+      navigate('/movies');
     }
-  }
+  };
 
   const onSubmit = async (data: PaymentForm) => {
-    if (!bookingData || !user) return
+    if (!bookingData || !user) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
-      // Create booking
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          user_id: user.id,
-          showtime_id: bookingData.selection.showtimeId,
-          total_seats: bookingData.selection.selectedSeats.length,
-          total_amount: bookingData.selection.totalAmount,
-          selected_seats: bookingData.selection.selectedSeats,
-          status: 'pending'
-        })
-        .select()
-        .single()
+      const bookingPayload = {
+        user: user.id,
+        showtime: bookingData.selection.showtimeId,
+        total_seats: bookingData.selection.selectedSeats.length,
+        total_amount: bookingData.selection.totalAmount,
+        selected_seats: bookingData.selection.selectedSeats,
+        status: 'confirmed'
+      };
 
-      if (bookingError) throw bookingError
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload),
+      });
 
-      // Create payment record
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          booking_id: booking.booking_id,
-          amount: bookingData.selection.totalAmount,
-          payment_method: data.paymentMethod,
-          status: 'success'
-        })
+      if (!response.ok) {
+        throw new Error('Booking failed');
+      }
 
-      if (paymentError) throw paymentError
+      const confirmedBooking = await response.json();
 
-      // Update booking status to confirmed
-      const { error: updateError } = await supabase
-        .from('bookings')
-        .update({ status: 'confirmed' })
-        .eq('booking_id', booking.booking_id)
+      sessionStorage.setItem('confirmedBookingId', confirmedBooking._id);
+      sessionStorage.removeItem('seatSelection');
 
-      if (updateError) throw updateError
-
-      // Store booking ID for confirmation page
-      sessionStorage.setItem('confirmedBookingId', booking.booking_id)
-      sessionStorage.removeItem('seatSelection')
-
-      toast.success('Payment successful!')
-      navigate('/booking-confirmation')
+      toast.success('Booking confirmed!');
+      navigate('/booking-confirmation');
     } catch (error) {
-      console.error('Error processing payment:', error)
-      toast.error('Payment failed. Please try again.')
+      console.error('Error processing booking:', error);
+      toast.error('Booking failed. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (!bookingData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
-  const { movie, showtime, selection } = bookingData
+  const { movie, showtime, selection } = bookingData;
 
   return (
     <div className="min-h-screen py-8">
@@ -363,5 +337,5 @@ export default function PaymentPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

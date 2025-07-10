@@ -1,126 +1,114 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Calendar, Clock, MapPin, Users } from 'lucide-react'
-import { supabase, type Movie, type Showtime } from '@/lib/supabase'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Calendar, Clock, MapPin } from 'lucide-react';
+import { IMovie, IShowtime } from '@/lib/mongodb';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 interface SeatSelectionData {
-  movieId: string
-  showtimeId: string
-  selectedSeats: string[]
-  totalAmount: number
+  movieId: string;
+  showtimeId: string;
+  selectedSeats: string[];
+  totalAmount: number;
 }
 
 export default function SeatSelectionPage() {
-  const { movieId } = useParams<{ movieId: string }>()
-  const navigate = useNavigate()
+  const { movieId } = useParams<{ movieId: string }>();
+  const navigate = useNavigate();
   
-  const [movie, setMovie] = useState<Movie | null>(null)
-  const [showtimes, setShowtimes] = useState<Showtime[]>([])
-  const [selectedShowtime, setSelectedShowtime] = useState<Showtime | null>(null)
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
+  const [movie, setMovie] = useState<IMovie | null>(null);
+  const [showtimes, setShowtimes] = useState<IShowtime[]>([]);
+  const [selectedShowtime, setSelectedShowtime] = useState<IShowtime | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (movieId) {
-      fetchMovieAndShowtimes(movieId)
+      fetchMovieAndShowtimes(movieId);
     }
-  }, [movieId])
+  }, [movieId]);
 
   const fetchMovieAndShowtimes = async (id: string) => {
     try {
-      // Fetch movie
-      const { data: movieData, error: movieError } = await supabase
-        .from('movies')
-        .select('*')
-        .eq('movie_id', id)
-        .single()
+      const [movieResponse, showtimesResponse] = await Promise.all([
+        fetch(`/api/movies/${id}`),
+        fetch(`/api/showtimes/movie/${id}`)
+      ]);
 
-      if (movieError) throw movieError
+      if (!movieResponse.ok) throw new Error('Movie not found');
+      if (!showtimesResponse.ok) throw new Error('Could not fetch showtimes');
 
-      // Fetch showtimes
-      const { data: showtimesData, error: showtimesError } = await supabase
-        .from('showtimes')
-        .select(`
-          *,
-          hall:halls(*)
-        `)
-        .eq('movie_id', id)
-        .gte('show_date', new Date().toISOString().split('T')[0])
-        .order('show_date')
-        .order('start_time')
+      const movieData = await movieResponse.json();
+      const showtimesData = await showtimesResponse.json();
 
-      if (showtimesError) throw showtimesError
-
-      setMovie(movieData)
-      setShowtimes(showtimesData || [])
+      setMovie(movieData);
+      setShowtimes(showtimesData || []);
     } catch (error) {
-      console.error('Error fetching data:', error)
-      toast.error('Failed to load movie details')
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load movie details');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const generateSeats = () => {
-    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-    const seatsPerRow = 10
-    const seats = []
+    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    const seatsPerRow = 10;
+    const seats = [];
     
     for (const row of rows) {
       for (let i = 1; i <= seatsPerRow; i++) {
-        const seatId = `${row}${i}`
-        const isOccupied = Math.random() < 0.2 // Randomly mark some seats as occupied
+        const seatId = `${row}${i}`;
+        // Set isOccupied to false to make all seats available
+        const isOccupied = false;
         seats.push({
           id: seatId,
           row,
           number: i,
           isOccupied,
           isSelected: selectedSeats.includes(seatId)
-        })
+        });
       }
     }
     
-    return seats
-  }
+    return seats;
+  };
 
   const handleSeatClick = (seatId: string, isOccupied: boolean) => {
-    if (isOccupied) return
+    if (isOccupied) return;
 
     setSelectedSeats(prev => {
       if (prev.includes(seatId)) {
-        return prev.filter(id => id !== seatId)
+        return prev.filter(id => id !== seatId);
       } else {
-        return [...prev, seatId]
+        return [...prev, seatId];
       }
-    })
-  }
+    });
+  };
 
   const handleProceedToPayment = () => {
     if (!selectedShowtime || selectedSeats.length === 0) {
-      toast.error('Please select a showtime and at least one seat')
-      return
+      toast.error('Please select a showtime and at least one seat');
+      return;
     }
 
     const selectionData: SeatSelectionData = {
       movieId: movieId!,
-      showtimeId: selectedShowtime.showtime_id,
+      showtimeId: selectedShowtime._id,
       selectedSeats,
       totalAmount: selectedSeats.length * selectedShowtime.ticket_price
-    }
+    };
 
-    // Store selection in sessionStorage
-    sessionStorage.setItem('seatSelection', JSON.stringify(selectionData))
-    navigate('/payment')
-  }
+    sessionStorage.setItem('seatSelection', JSON.stringify(selectionData));
+    navigate('/payment');
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   if (!movie) {
@@ -133,10 +121,10 @@ export default function SeatSelectionPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  const seats = generateSeats()
+  const seats = generateSeats();
 
   return (
     <div className="min-h-screen py-8">
@@ -162,9 +150,9 @@ export default function SeatSelectionPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {showtimes.map((showtime) => (
                   <div
-                    key={showtime.showtime_id}
+                    key={showtime._id}
                     className={`card p-4 cursor-pointer transition-all ${
-                      selectedShowtime?.showtime_id === showtime.showtime_id
+                      selectedShowtime?._id === showtime._id
                         ? 'border-primary-500 bg-primary-500/10'
                         : 'hover:border-primary-500/50'
                     }`}
@@ -305,5 +293,5 @@ export default function SeatSelectionPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

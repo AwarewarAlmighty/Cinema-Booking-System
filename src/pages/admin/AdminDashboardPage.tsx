@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react';
+import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface DashboardStats {
-  totalMovies: number
-  totalHalls: number
-  totalShowtimes: number
-  totalBookings: number
-  totalRevenue: number
+  totalMovies: number;
+  totalHalls: number;
+  totalShowtimes: number;
+  totalBookings: number;
+  totalRevenue: number;
 }
 
 export default function AdminDashboardPage() {
@@ -18,44 +17,54 @@ export default function AdminDashboardPage() {
     totalShowtimes: 0,
     totalBookings: 0,
     totalRevenue: 0
-  })
-  const [loading, setLoading] = useState(true)
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats()
-  }, [])
+    fetchDashboardStats();
+  }, []);
 
   const fetchDashboardStats = async () => {
     try {
       const [moviesRes, hallsRes, showtimesRes, bookingsRes] = await Promise.all([
-        supabase.from('movies').select('*', { count: 'exact', head: true }),
-        supabase.from('halls').select('*', { count: 'exact', head: true }),
-        supabase.from('showtimes').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('total_amount')
-      ])
+        fetch('/api/movies'),
+        fetch('/api/halls'),
+        fetch('/api/showtimes'),
+        fetch('/api/bookings')
+      ]);
 
-      const totalRevenue = bookingsRes.data?.reduce((sum, booking) => sum + booking.total_amount, 0) || 0
+      const moviesData = await moviesRes.json();
+      const hallsData = await hallsRes.json();
+      const showtimesData = await showtimesRes.json();
+      const bookingsData = await bookingsRes.json();
+
+      const totalRevenue = bookingsData.reduce((sum: number, booking: any) => {
+        if (booking.status === 'confirmed') {
+          return sum + booking.total_amount;
+        }
+        return sum;
+      }, 0);
 
       setStats({
-        totalMovies: moviesRes.count || 0,
-        totalHalls: hallsRes.count || 0,
-        totalShowtimes: showtimesRes.count || 0,
-        totalBookings: bookingsRes.data?.length || 0,
+        totalMovies: moviesData.length || 0,
+        totalHalls: hallsData.length || 0,
+        totalShowtimes: showtimesData.length || 0,
+        totalBookings: bookingsData.length || 0,
         totalRevenue
-      })
+      });
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
+      console.error('Error fetching dashboard stats:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   const statCards = [
@@ -94,7 +103,7 @@ export default function AdminDashboardPage() {
       color: 'text-primary-400',
       bgColor: 'bg-primary-500/20'
     }
-  ]
+  ];
 
   return (
     <div className="space-y-8">
@@ -106,7 +115,7 @@ export default function AdminDashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {statCards.map((stat, index) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
             <div key={index} className="card p-6">
               <div className="flex items-center justify-between">
@@ -121,11 +130,11 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions & System Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
@@ -143,24 +152,6 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-slate-300">New booking received</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-slate-300">Movie added to catalog</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              <span className="text-slate-300">Showtime scheduled</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="card p-6">
           <h3 className="text-lg font-semibold mb-4">System Status</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -168,34 +159,16 @@ export default function AdminDashboardPage() {
               <span className="text-green-400">Online</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-300">Payment Gateway</span>
-              <span className="text-green-400">Active</span>
+              <span className="text-slate-300">API Service</span>
+              <span className="text-green-400">Running</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-300">Booking System</span>
-              <span className="text-green-400">Running</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Today's Summary</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">New Bookings</span>
-              <span className="text-white font-medium">12</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Revenue</span>
-              <span className="text-white font-medium">IDR 2,450,000</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Occupancy Rate</span>
-              <span className="text-white font-medium">78%</span>
+              <span className="text-green-400">Active</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

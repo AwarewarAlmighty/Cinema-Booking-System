@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Calendar, Clock, MapPin, Users, Ticket, ArrowLeft } from 'lucide-react'
-import { supabase, type Booking } from '@/lib/supabase'
+import { IBooking } from '@/lib/mongodb' // Updated import
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function BookingDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
-  const [booking, setBooking] = useState<Booking | null>(null)
+  const [booking, setBooking] = useState<IBooking | null>(null) // Updated state type
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,21 +19,18 @@ export default function BookingDetailsPage() {
 
   const fetchBookingDetails = async (bookingId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          showtime:showtimes(
-            *,
-            movie:movies(*),
-            hall:halls(*)
-          )
-        `)
-        .eq('booking_id', bookingId)
-        .eq('user_id', user?.id)
-        .single()
+      // Fetch booking details from your Express API
+      const response = await fetch(`/api/bookings/${bookingId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch booking details');
+      }
+      const data = await response.json();
 
-      if (error) throw error
+      // Basic check to ensure the logged-in user owns this booking
+      if (data.user._id !== user?.id) {
+          throw new Error("You are not authorized to view this booking.");
+      }
+      
       setBooking(data)
     } catch (error) {
       console.error('Error fetching booking details:', error)
@@ -117,7 +114,7 @@ export default function BookingDetailsPage() {
                     <Ticket className="h-6 w-6 text-primary-400" />
                     <div>
                       <p className="text-sm text-slate-400">Booking ID</p>
-                      <p className="font-semibold">#{booking.booking_id}</p>
+                      <p className="font-semibold">#{booking._id.slice(-6)}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -205,5 +202,5 @@ export default function BookingDetailsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

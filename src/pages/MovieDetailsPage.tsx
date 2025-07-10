@@ -1,43 +1,42 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { Clock, Calendar, Play, Ticket } from 'lucide-react'
-import { supabase, type Movie } from '@/lib/supabase'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Clock, Calendar, Play, Ticket } from 'lucide-react';
+import { IMovie } from '@/lib/mongodb'; // Updated import
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function MovieDetailsPage() {
-  const { id } = useParams<{ id: string }>()
-  const [movie, setMovie] = useState<Movie | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { id } = useParams<{ id: string }>();
+  const [movie, setMovie] = useState<IMovie | null>(null); // Updated state type
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      fetchMovie(id)
+      fetchMovie(id);
     }
-  }, [id])
+  }, [id]);
 
   const fetchMovie = async (movieId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('movies')
-        .select('*')
-        .eq('movie_id', movieId)
-        .single()
-
-      if (error) throw error
-      setMovie(data)
+      // Fetches a single movie from the Express API endpoint
+      const response = await fetch(`/api/movies/${movieId}`);
+      if (!response.ok) {
+        throw new Error('Movie not found');
+      }
+      const data = await response.json();
+      setMovie(data);
     } catch (error) {
-      console.error('Error fetching movie:', error)
+      console.error('Error fetching movie:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   if (!movie) {
@@ -50,7 +49,7 @@ export default function MovieDetailsPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -116,7 +115,7 @@ export default function MovieDetailsPage() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Link
-                  to={`/seat-selection/${movie.movie_id}`}
+                  to={`/seat-selection/${movie._id}`} // Updated to use MongoDB's _id
                   className="btn btn-primary text-lg px-8 py-3 flex items-center justify-center space-x-2"
                 >
                   <Ticket className="h-5 w-5" />
@@ -134,5 +133,5 @@ export default function MovieDetailsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

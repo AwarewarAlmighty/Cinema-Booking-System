@@ -1,57 +1,52 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { CheckCircle, Calendar, Clock, MapPin, Users, Ticket } from 'lucide-react'
-import { supabase, type Booking } from '@/lib/supabase'
-import LoadingSpinner from '@/components/LoadingSpinner'
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { CheckCircle, Calendar, Clock, MapPin, Users, Ticket } from 'lucide-react';
+import { IBooking } from '@/lib/mongodb'; // Updated import
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function BookingConfirmationPage() {
-  const navigate = useNavigate()
-  const [booking, setBooking] = useState<Booking | null>(null)
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+  const [booking, setBooking] = useState<IBooking | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadBookingDetails()
-  }, [])
+    loadBookingDetails();
+  }, []);
 
   const loadBookingDetails = async () => {
     try {
-      const bookingId = sessionStorage.getItem('confirmedBookingId')
+      const bookingId = sessionStorage.getItem('confirmedBookingId');
       if (!bookingId) {
-        navigate('/bookings')
-        return
+        navigate('/bookings');
+        return;
       }
 
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          showtime:showtimes(
-            *,
-            movie:movies(*),
-            hall:halls(*)
-          )
-        `)
-        .eq('booking_id', bookingId)
-        .single()
+      // Fetch booking details from your Express API
+      const response = await fetch(`/api/bookings/${bookingId}`);
+      if (!response.ok) {
+        throw new Error('Could not load booking details');
+      }
+      
+      const data = await response.json();
+      setBooking(data);
+      
+      // It's better to remove the item from session storage after successfully fetching
+      sessionStorage.removeItem('confirmedBookingId');
 
-      if (error) throw error
-
-      setBooking(data)
-      sessionStorage.removeItem('confirmedBookingId')
     } catch (error) {
-      console.error('Error loading booking details:', error)
-      navigate('/bookings')
+      console.error('Error loading booking details:', error);
+      navigate('/bookings');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   if (!booking) {
@@ -64,7 +59,7 @@ export default function BookingConfirmationPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,7 +98,7 @@ export default function BookingConfirmationPage() {
                 <Ticket className="h-5 w-5 text-primary-400" />
                 <div>
                   <p className="text-sm text-slate-400">Booking ID</p>
-                  <p className="font-semibold">#{booking.booking_id}</p>
+                  <p className="font-semibold">#{booking._id.slice(-6)}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -167,5 +162,5 @@ export default function BookingConfirmationPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

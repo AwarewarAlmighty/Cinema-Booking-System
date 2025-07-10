@@ -1,84 +1,81 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Calendar, Clock, MapPin, Eye, X } from 'lucide-react'
-import { supabase, type Booking } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import toast from 'react-hot-toast'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Calendar, Clock, MapPin, Eye, X } from 'lucide-react';
+import { IBooking } from '@/lib/mongodb'; // Updated import
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 export default function BookingsPage() {
-  const { user } = useAuth()
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<IBooking[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      fetchBookings()
+      fetchBookings();
     }
-  }, [user])
+  }, [user]);
 
   const fetchBookings = async () => {
+    if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          showtime:showtimes(
-            *,
-            movie:movies(*),
-            hall:halls(*)
-          )
-        `)
-        .eq('user_id', user?.id)
-        .order('booking_date', { ascending: false })
-
-      if (error) throw error
-      setBookings(data || [])
+      // Fetch bookings from the Express API for the current user
+      const response = await fetch(`/api/bookings/user/${user.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+      const data = await response.json();
+      setBookings(data || []);
     } catch (error) {
-      console.error('Error fetching bookings:', error)
-      toast.error('Failed to load bookings')
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to load bookings');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: 'cancelled' })
-        .eq('booking_id', bookingId)
+      // Send a request to the backend to cancel the booking
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to cancel booking');
+      }
 
-      toast.success('Booking cancelled successfully')
-      fetchBookings() // Refresh the list
+      toast.success('Booking cancelled successfully');
+      fetchBookings(); // Refresh the list
     } catch (error) {
-      console.error('Error cancelling booking:', error)
-      toast.error('Failed to cancel booking')
+      console.error('Error cancelling booking:', error);
+      toast.error('Failed to cancel booking');
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
-    const baseClasses = 'status-badge'
+    const baseClasses = 'status-badge';
     switch (status) {
       case 'confirmed':
-        return `${baseClasses} status-confirmed`
+        return `${baseClasses} status-confirmed`;
       case 'cancelled':
-        return `${baseClasses} status-cancelled`
+        return `${baseClasses} status-cancelled`;
       default:
-        return `${baseClasses} status-pending`
+        return `${baseClasses} status-pending`;
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    )
+    );
   }
 
   return (
@@ -98,7 +95,7 @@ export default function BookingsPage() {
         ) : (
           <div className="space-y-6">
             {bookings.map((booking) => (
-              <div key={booking.booking_id} className="card p-6">
+              <div key={booking._id} className="card p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-start space-x-4 mb-4 lg:mb-0">
                     <img
@@ -142,15 +139,15 @@ export default function BookingsPage() {
 
                   <div className="flex space-x-3">
                     <Link
-                      to={`/bookings/${booking.booking_id}`}
+                      to={`/bookings/${booking._id}`}
                       className="btn btn-secondary flex items-center space-x-2"
                     >
                       <Eye className="h-4 w-4" />
                       <span>View</span>
                     </Link>
-                    {booking.status === 'pending' && (
+                    {booking.status === 'confirmed' && (
                       <button
-                        onClick={() => handleCancelBooking(booking.booking_id)}
+                        onClick={() => handleCancelBooking(booking._id)}
                         className="btn btn-danger flex items-center space-x-2"
                       >
                         <X className="h-4 w-4" />
@@ -165,5 +162,5 @@ export default function BookingsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
