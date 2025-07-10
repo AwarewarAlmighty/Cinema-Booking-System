@@ -139,8 +139,8 @@ export default function AdminDashboardPage() {
             <button onClick={() => navigate('/admin/showtimes?openModal=true')} className="btn btn-secondary w-full text-left">
               Create Showtime
             </button>
-            <button className="btn btn-secondary w-full text-left">
-              View Reports
+            <button onClick={() => navigate('/admin/report?openModal=true')} className="btn btn-secondary w-full text-left">
+              View Report
             </button>
           </div>
         </div>

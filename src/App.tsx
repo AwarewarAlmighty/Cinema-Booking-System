@@ -25,6 +25,7 @@ import AdminMoviesPage from './pages/admin/AdminMoviesPage'
 import AdminHallsPage from './pages/admin/AdminHallsPage'
 import AdminShowtimesPage from './pages/admin/AdminShowtimesPage'
 import AdminBookingsPage from './pages/admin/AdminBookingsPage'
+import AdminReportsPage from './pages/admin/AdminReport'
 
 function App() {
   const { user, isAdmin } = useAuth()
@@ -79,6 +80,7 @@ function App() {
         <Route path="halls" element={<AdminHallsPage />} />
         <Route path="showtimes" element={<AdminShowtimesPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
+        <Route path="report" element={<AdminReportsPage />} />
       </Route>
     </Routes>
   )
