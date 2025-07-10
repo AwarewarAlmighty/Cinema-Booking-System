@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { ArrowLeft } from 'lucide-react';
 import { IMovie, IShowtime } from '@/lib/mongodb';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import BookingProgress from '@/components/BookingProgress';
 
 interface PaymentForm {
   cardNumber: string;
   expiryDate: string;
   cvv: string;
   cardHolder: string;
-  paymentMethod: 'credit_card' | 'debit_card' | 'paypal';
 }
 
 interface SeatSelectionData {
@@ -24,7 +25,7 @@ interface SeatSelectionData {
 export default function PaymentPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [bookingData, setBookingData] = useState<{
     movie: IMovie;
     showtime: IShowtime;
@@ -35,11 +36,7 @@ export default function PaymentPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PaymentForm>({
-    defaultValues: {
-      paymentMethod: 'credit_card'
-    }
-  });
+  } = useForm<PaymentForm>();
 
   useEffect(() => {
     loadBookingData();
@@ -61,8 +58,9 @@ export default function PaymentPage() {
         fetch(`/api/showtimes/${selection.showtimeId}`)
       ]);
 
-      if (!movieResponse.ok) throw new Error('Movie not found');
-      if (!showtimeResponse.ok) throw new Error('Showtime not found');
+      if (!movieResponse.ok || !showtimeResponse.ok) {
+        throw new Error('Failed to load booking details');
+      }
 
       const movieData = await movieResponse.json();
       const showtimeData = await showtimeResponse.json();
@@ -76,6 +74,8 @@ export default function PaymentPage() {
       console.error('Error loading booking data:', error);
       toast.error('Failed to load booking data');
       navigate('/movies');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,10 +104,8 @@ export default function PaymentPage() {
       }
 
       const confirmedBooking = await response.json();
-
       sessionStorage.setItem('confirmedBookingId', confirmedBooking._id);
       sessionStorage.removeItem('seatSelection');
-
       toast.success('Booking confirmed!');
       navigate('/booking-confirmation');
     } catch (error) {
@@ -118,224 +116,85 @@ export default function PaymentPage() {
     }
   };
 
-  if (!bookingData) {
+  if (loading || !bookingData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-dark-900">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
-
+  
   const { movie, showtime, selection } = bookingData;
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-display font-bold mb-8">Payment Information</h1>
+    <div className="min-h-screen bg-dark-900 text-white">
+      <header className="bg-dark-800/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <button onClick={() => navigate(-1)} className="btn btn-secondary flex items-center space-x-2">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </button>
+          <BookingProgress currentStep="payment" />
+          <div></div>
+        </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Booking Summary */}
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <img
-                  src={movie.poster_url || 'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=100&h=150&fit=crop'}
-                  alt={movie.title}
-                  className="w-16 h-24 object-cover rounded"
-                />
-                <div>
-                  <h3 className="font-semibold">{movie.title}</h3>
-                  <p className="text-slate-400 text-sm">{movie.genre} • {movie.duration} mins</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4 border-t border-dark-600">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Hall:</span>
-                  <span>{showtime.hall?.hall_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Date:</span>
-                  <span>{new Date(showtime.show_date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Time:</span>
-                  <span>{showtime.start_time}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Seats:</span>
-                  <span>{selection.selectedSeats.join(', ')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Quantity:</span>
-                  <span>{selection.selectedSeats.length} ticket(s)</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-dark-600">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total Amount:</span>
-                  <span className="text-primary-400">
-                    IDR {selection.totalAmount.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Payment Form */}
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Payment Method */}
+          <div className="bg-dark-800 p-6 rounded-lg">
+            <h2 className="text-2xl font-bold mb-6">Payment Details</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Payment Method
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      {...register('paymentMethod')}
-                      type="radio"
-                      value="credit_card"
-                      className="text-primary-500"
-                    />
-                    <span className="text-sm">Credit Card</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      {...register('paymentMethod')}
-                      type="radio"
-                      value="debit_card"
-                      className="text-primary-500"
-                    />
-                    <span className="text-sm">Debit Card</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      {...register('paymentMethod')}
-                      type="radio"
-                      value="paypal"
-                      className="text-primary-500"
-                    />
-                    <span className="text-sm">PayPal</span>
-                  </label>
-                </div>
+                <label className="block text-sm font-medium mb-1">Card Holder Name</label>
+                <input {...register('cardHolder', { required: true })} className="input" />
               </div>
-
-              {/* Card Details */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Card Number
-                  </label>
-                  <input
-                    {...register('cardNumber', {
-                      required: 'Card number is required',
-                      pattern: {
-                        value: /^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/,
-                        message: 'Invalid card number format'
-                      }
-                    })}
-                    type="text"
-                    placeholder="1234 5678 9012 3456"
-                    className="input"
-                  />
-                  {errors.cardNumber && (
-                    <p className="mt-1 text-sm text-red-400">{errors.cardNumber.message}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Expiry Date
-                    </label>
-                    <input
-                      {...register('expiryDate', {
-                        required: 'Expiry date is required',
-                        pattern: {
-                          value: /^\d{2}\/\d{2}$/,
-                          message: 'Format: MM/YY'
-                        }
-                      })}
-                      type="text"
-                      placeholder="MM/YY"
-                      className="input"
-                    />
-                    {errors.expiryDate && (
-                      <p className="mt-1 text-sm text-red-400">{errors.expiryDate.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      CVV
-                    </label>
-                    <input
-                      {...register('cvv', {
-                        required: 'CVV is required',
-                        pattern: {
-                          value: /^\d{3,4}$/,
-                          message: 'Invalid CVV'
-                        }
-                      })}
-                      type="text"
-                      placeholder="123"
-                      className="input"
-                    />
-                    {errors.cvv && (
-                      <p className="mt-1 text-sm text-red-400">{errors.cvv.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Card Holder Name
-                  </label>
-                  <input
-                    {...register('cardHolder', {
-                      required: 'Card holder name is required'
-                    })}
-                    type="text"
-                    placeholder="John Doe"
-                    className="input"
-                  />
-                  {errors.cardHolder && (
-                    <p className="mt-1 text-sm text-red-400">{errors.cardHolder.message}</p>
-                  )}
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Card Number</label>
+                <input {...register('cardNumber', { required: true })} className="input" placeholder="0000 0000 0000 0000" />
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4 pt-6">
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="btn btn-secondary flex-1"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn btn-primary flex-1"
-                >
-                  {loading ? (
-                    <LoadingSpinner size="sm" />
-                  ) : (
-                    `Pay IDR ${selection.totalAmount.toLocaleString()}`
-                  )}
-                </button>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Expiry Date</label>
+                  <input {...register('expiryDate', { required: true })} className="input" placeholder="MM/YY" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">CVV</label>
+                  <input {...register('cvv', { required: true })} className="input" placeholder="123" />
+                </div>
               </div>
             </form>
           </div>
+
+          {/* Booking Summary */}
+          <div className="bg-dark-800 p-6 rounded-lg">
+            <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <img src={movie.poster_url} alt={movie.title} className="w-20 rounded-lg" />
+                <div>
+                  <h3 className="font-semibold text-lg">{movie.title}</h3>
+                  <p className="text-sm text-slate-400">{showtime.hall.hall_name}</p>
+                </div>
+              </div>
+              <div className="border-t border-dark-700 pt-4 space-y-2">
+                <div className="flex justify-between"><span className="text-slate-400">Date</span><span>{new Date(showtime.show_date).toLocaleDateString()}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Time</span><span>{showtime.start_time}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Seats</span><span>{selection.selectedSeats.join(', ')}</span></div>
+              </div>
+              <div className="border-t border-dark-700 pt-4">
+                <div className="flex justify-between font-bold text-xl">
+                    <span>Total</span>
+                    <span>IDR {selection.totalAmount.toLocaleString()}</span>
+                </div>
+              </div>
+              <button onClick={handleSubmit(onSubmit)} disabled={loading} className="btn btn-primary w-full text-lg mt-4">
+                {loading ? <LoadingSpinner size="sm" /> : 'Confirm and Pay'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

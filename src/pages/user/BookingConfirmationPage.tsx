@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Calendar, Clock, MapPin, Users, Ticket } from 'lucide-react';
-import { IBooking } from '@/lib/mongodb'; // Updated import
+import { CheckCircle, Calendar, Clock, MapPin, Users, Ticket, ArrowLeft } from 'lucide-react';
+import { IBooking } from '@/lib/mongodb';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import BookingProgress from '@/components/BookingProgress';
 
 export default function BookingConfirmationPage() {
   const navigate = useNavigate();
@@ -10,157 +11,72 @@ export default function BookingConfirmationPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadBookingDetails();
-  }, []);
-
-  const loadBookingDetails = async () => {
-    try {
-      const bookingId = sessionStorage.getItem('confirmedBookingId');
-      if (!bookingId) {
-        navigate('/bookings');
-        return;
-      }
-
-      // Fetch booking details from your Express API
-      const response = await fetch(`/api/bookings/${bookingId}`);
-      if (!response.ok) {
-        throw new Error('Could not load booking details');
-      }
-      
-      const data = await response.json();
-      setBooking(data);
-      
-      // It's better to remove the item from session storage after successfully fetching
-      sessionStorage.removeItem('confirmedBookingId');
-
-    } catch (error) {
-      console.error('Error loading booking details:', error);
-      navigate('/bookings');
-    } finally {
+    const bookingId = sessionStorage.getItem('confirmedBookingId');
+    if (bookingId) {
+      fetch(`/api/bookings/${bookingId}`)
+        .then(res => res.json())
+        .then(data => {
+          setBooking(data);
+          sessionStorage.removeItem('confirmedBookingId');
+        })
+        .catch(() => navigate('/bookings'))
+        .finally(() => setLoading(false));
+    } else {
       setLoading(false);
+      navigate('/bookings');
     }
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-dark-900">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (!booking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Booking Not Found</h1>
-          <Link to="/bookings" className="btn btn-primary">
-            View My Bookings
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-display font-bold mb-2">
-            Booking Confirmed!
-          </h1>
-          <p className="text-slate-400">
-            Your tickets have been successfully booked.
-          </p>
+    <div className="min-h-screen bg-dark-900 text-white">
+      <header className="bg-dark-800/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <Link to="/" className="btn btn-secondary flex items-center space-x-2">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Home</span>
+          </Link>
+          <BookingProgress currentStep="finish" />
+          <div></div>
         </div>
-
-        <div className="card p-6 mb-8">
-          <div className="flex items-center space-x-4 mb-6">
-            <img
-              src={booking.showtime?.movie?.poster_url || 'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=100&h=150&fit=crop'}
-              alt={booking.showtime?.movie?.title}
-              className="w-20 h-30 object-cover rounded-lg"
-            />
-            <div>
-              <h2 className="text-xl font-semibold mb-1">
-                {booking.showtime?.movie?.title}
-              </h2>
-              <p className="text-slate-400">
-                {booking.showtime?.movie?.genre} • {booking.showtime?.movie?.duration} mins
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Ticket className="h-5 w-5 text-primary-400" />
-                <div>
-                  <p className="text-sm text-slate-400">Booking ID</p>
-                  <p className="font-semibold">#{booking._id.slice(-6)}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-primary-400" />
-                <div>
-                  <p className="text-sm text-slate-400">Hall</p>
-                  <p className="font-semibold">{booking.showtime?.hall?.hall_name}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-primary-400" />
-                <div>
-                  <p className="text-sm text-slate-400">Date</p>
-                  <p className="font-semibold">
-                    {new Date(booking.showtime?.show_date || '').toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-primary-400" />
-                <div>
-                  <p className="text-sm text-slate-400">Time</p>
-                  <p className="font-semibold">{booking.showtime?.start_time}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-primary-400" />
-                <div>
-                  <p className="text-sm text-slate-400">Seats</p>
-                  <p className="font-semibold">{booking.selected_seats?.join(', ')}</p>
-                </div>
-              </div>
+      </header>
+      
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 text-center">
+        <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
+        <h1 className="text-4xl font-display font-bold mb-2">Booking Confirmed!</h1>
+        <p className="text-slate-400 mb-8">Your e-tickets have been sent to your email.</p>
+        
+        {booking && (
+          <div className="bg-dark-800 p-6 rounded-lg text-left space-y-4">
+            <div className="flex items-center gap-4">
+              <img src={booking.showtime.movie.poster_url} alt={booking.showtime.movie.title} className="w-24 rounded-lg" />
               <div>
-                <p className="text-sm text-slate-400">Total Amount</p>
-                <p className="font-semibold text-lg text-primary-400">
-                  IDR {booking.total_amount.toLocaleString()}
-                </p>
+                <h2 className="text-xl font-semibold">{booking.showtime.movie.title}</h2>
+                <p className="text-slate-400">{booking.showtime.movie.genre} • {booking.showtime.movie.duration} mins</p>
               </div>
             </div>
+            <div className="border-t border-dark-700 pt-4 grid grid-cols-2 gap-4">
+              <div><p className="text-sm text-slate-400">Hall</p><p>{booking.showtime.hall.hall_name}</p></div>
+              <div><p className="text-sm text-slate-400">Date</p><p>{new Date(booking.showtime.show_date).toLocaleDateString()}</p></div>
+              <div><p className="text-sm text-slate-400">Time</p><p>{booking.showtime.start_time}</p></div>
+              <div><p className="text-sm text-slate-400">Seats</p><p>{booking.selected_seats.join(', ')}</p></div>
+            </div>
           </div>
-        </div>
-
-        <div className="text-center space-y-4">
-          <p className="text-slate-400">
-            Please arrive at the cinema at least 15 minutes before the show time.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/bookings" className="btn btn-primary">
-              View My Bookings
+        )}
+        
+        <div className="mt-8">
+            <Link to="/bookings" className="btn btn-primary w-full max-w-xs text-lg">
+                View My Bookings
             </Link>
-            <Link to="/" className="btn btn-secondary">
-              Back to Home
-            </Link>
-          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

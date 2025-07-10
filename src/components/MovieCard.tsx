@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Clock, Calendar } from 'lucide-react';
-import type { IMovie } from '@/lib/mongodb'; // Changed to import from mongodb
+import type { IMovie } from '@/lib/mongodb';
 
 interface MovieCardProps {
-  movie: IMovie; // Changed to use the IMovie interface
+  movie: IMovie;
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
@@ -16,7 +16,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary-400 transition-colors">
           {movie.title}
         </h3>
@@ -30,15 +30,25 @@ export default function MovieCard({ movie }: MovieCardProps) {
             <span>{new Date(movie.release_date).getFullYear()}</span>
           </div>
         </div>
-        <p className="text-slate-300 text-sm mb-4 line-clamp-2">
+        <p className="text-slate-300 text-sm mb-4 line-clamp-2 flex-grow">
           {movie.description}
         </p>
-        <Link
-          to={`/movies/${movie._id}`} // Changed to use _id
-          className="btn btn-primary w-full"
-        >
-          View Details
-        </Link>
+        <div className="flex gap-2 mt-auto">
+            {/* This button now links to the movie details page */}
+            <Link
+              to={`/movie/${movie._id}`}
+              className="btn btn-secondary flex-1"
+            >
+              View Details
+            </Link>
+            {/* This button still links to the streamlined booking page */}
+            <Link
+              to={`/book/${movie._id}`}
+              className="btn btn-primary flex-1"
+            >
+              Book Tickets
+            </Link>
+        </div>
       </div>
     </div>
   );

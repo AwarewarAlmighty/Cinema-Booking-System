@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Clock, Calendar, Play, Ticket } from 'lucide-react';
-import { IMovie } from '@/lib/mongodb'; // Updated import
+import { IMovie } from '@/lib/mongodb';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const [movie, setMovie] = useState<IMovie | null>(null); // Updated state type
+  const [movie, setMovie] = useState<IMovie | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,7 +17,6 @@ export default function MovieDetailsPage() {
 
   const fetchMovie = async (movieId: string) => {
     try {
-      // Fetches a single movie from the Express API endpoint
       const response = await fetch(`/api/movies/${movieId}`);
       if (!response.ok) {
         throw new Error('Movie not found');
@@ -60,7 +59,7 @@ export default function MovieDetailsPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <img
-                src={movie.poster_url || 'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop'}
+                src={movie.poster_url || ''}
                 alt={movie.title}
                 className="w-full rounded-xl shadow-2xl"
               />
@@ -115,18 +114,12 @@ export default function MovieDetailsPage() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <Link
-                  to={`/seat-selection/${movie._id}`} // Updated to use MongoDB's _id
+                  to={`/book/${movie._id}`}
                   className="btn btn-primary text-lg px-8 py-3 flex items-center justify-center space-x-2"
                 >
                   <Ticket className="h-5 w-5" />
                   <span>Book Tickets</span>
                 </Link>
-                {movie.trailer_url && (
-                  <button className="btn btn-secondary text-lg px-8 py-3 flex items-center justify-center space-x-2">
-                    <Play className="h-5 w-5" />
-                    <span>Watch Trailer</span>
-                  </button>
-                )}
               </div>
             </div>
           </div>
