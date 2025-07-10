@@ -7,7 +7,8 @@ import {
   Users, 
   LogOut,
   Menu,
-  X
+  X,
+  BarChart3
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Halls', href: '/admin/halls', icon: Building },
   { name: 'Showtimes', href: '/admin/showtimes', icon: Calendar },
   { name: 'Bookings', href: '/admin/bookings', icon: Users },
+  { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
 ]
 
 export default function AdminLayout() {

@@ -4,6 +4,9 @@ import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
+
+
+
 interface DashboardStats {
   totalMovies: number
   totalHalls: number
@@ -11,6 +14,8 @@ interface DashboardStats {
   totalBookings: number
   totalRevenue: number
 }
+
+
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -139,7 +144,7 @@ export default function AdminDashboardPage() {
             <button onClick={() => navigate('/admin/showtimes?openModal=true')} className="btn btn-secondary w-full text-left">
               Create Showtime
             </button>
-            <button className="btn btn-secondary w-full text-left">
+            <button onClick={() => navigate('/admin/reports?openModal=true')} className="btn btn-secondary w-full text-left">
               View Reports
             </button>
           </div>
