@@ -3,6 +3,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 // Interface for the Movie document from MongoDB
 export interface IMovie {
@@ -169,6 +170,7 @@ export default function AdminMoviesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<IMovie | null>(null);
   const [movieToDelete, setMovieToDelete] = useState<IMovie | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     fetchMovies();
@@ -195,6 +197,14 @@ export default function AdminMoviesPage() {
     setEditingMovie(movie);
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+    if (searchParams.get('openModal') === 'true') {
+      handleOpenModal(null);
+      searchParams.delete('openModal');
+      setSearchParams(searchParams);
+    }
+  }, []);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
