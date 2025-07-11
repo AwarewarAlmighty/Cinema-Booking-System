@@ -14,25 +14,40 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// --- NEW, MORE ROBUST CORS CONFIGURATION ---
+// --- CORS Configuration ---
 const allowedOrigins = [
   'http://localhost:5173',
   'https://cinema-booking-system.netlify.app'
 ];
 
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+};
+
+// --- Middleware ---
+
+// 1. Enable CORS for all routes and handle preflight requests
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // This is crucial for preflight requests
+
+// 2. Simple request logger to see what's hitting the server
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', true);
-  return next();
+  console.log(`Incoming Request: ${req.method} ${req.path}`);
+  next();
 });
 
+// 3. Body parser
 app.use(express.json());
 
+
+// --- Database Connection ---
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Successfully connected to MongoDB'))
   .catch((error) => console.error('❌ Error connecting to MongoDB:', error));
@@ -44,6 +59,7 @@ app.use('/api/halls', hallRoutes);
 app.use('/api/showtimes', showtimeRoutes);
 app.use('/api/bookings', bookingRoutes);
 
+// --- Server Listener ---
 app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
+  console.log(`✅ Backend server is running on http://localhost:${PORT}`);
 });
