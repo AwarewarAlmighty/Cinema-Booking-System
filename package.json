@@ -16,6 +16,7 @@
     "date-fns": "^2.30.0",
     "dotenv": "^17.2.0",
     "lucide-react": "^0.294.0",
+    "nodemailer": "^7.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",

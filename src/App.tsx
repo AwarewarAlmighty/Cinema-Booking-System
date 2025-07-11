@@ -28,6 +28,7 @@ import AdminShowtimesPage from './pages/admin/AdminShowtimesPage'
 import AdminBookingsPage from './pages/admin/AdminBookingsPage'
 import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage' 
 import AdminReportsPage from './pages/admin/AdminReport' 
+import EmailVerifiedPage from './pages/auth/EmailVerifiedPage'
 
 function App() {
   useAuth()
@@ -75,6 +76,10 @@ function App() {
         } />
       </Route>
 
+      <Route path="/verify-email" element={<EmailVerifiedPage />} />
+      
+      {/* Catch-all route for 404 */}
+
       {/* Admin routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={
@@ -89,6 +94,7 @@ function App() {
         <Route path="bookings" element={<AdminBookingsPage />} />
         <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
+        
       </Route>
     </Routes>
   )

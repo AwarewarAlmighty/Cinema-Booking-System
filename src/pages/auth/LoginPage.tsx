@@ -6,6 +6,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 
 interface LoginForm {
   email: string;
@@ -18,6 +19,13 @@ export default function LoginPage() {
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+  const query = new URLSearchParams(location.search);
+  if (query.get('verified') === 'true') {
+    toast.success('Email verified! You can now log in.');
+  }
+}, []);
   
   const from = location.state?.from?.pathname || '/';
 
@@ -32,12 +40,14 @@ export default function LoginPage() {
     try {
       const { error } = await signIn(data.email, data.password);
       
+      
       if (error) {
-        toast.error('Invalid email or password');
-      } else {
-        toast.success('Welcome back!');
-        navigate(from, { replace: true });
+        toast.error(error.message || 'Invalid email or password.');
+        return;
       }
+      // If signIn is successful, navigate to the intended page
+      toast.success('Welcome back!');
+      navigate(from, { replace: true });
     } catch (error) {
       toast.error('An error occurred. Please try again.');
     } finally {

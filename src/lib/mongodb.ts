@@ -65,6 +65,8 @@ const UserSchema: Schema = new Schema({
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isVerified: { type: Boolean, default: false },
+    verificationToken: String,
 }, { timestamps: true });
 
 const MovieSchema: Schema = new Schema({
