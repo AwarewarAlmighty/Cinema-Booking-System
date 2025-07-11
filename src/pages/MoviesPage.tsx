@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Search, Filter } from 'lucide-react';
-import { IMovie } from '@/lib/mongodb'; // Corrected import
+import { IMovie } from '@/lib/mongodb';
 import MovieCard from '@/components/MovieCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { apiFetch } from '@/lib/api';
 
 export default function MoviesPage() {
   const [movies, setMovies] = useState<IMovie[]>([]);
@@ -22,17 +23,10 @@ export default function MoviesPage() {
 
   const fetchMovies = async () => {
     try {
-      // Fetches movies from the Express API endpoint which connects to MongoDB
-      const response = await fetch('/api/movies');
-      if (!response.ok) {
-        throw new Error('Failed to fetch movies');
-      }
-      const data = await response.json();
-
+      const data = await apiFetch('/api/movies');
       setMovies(data || []);
       
-      // Extract unique genres
-      const uniqueGenres = [...new Set(data?.map((movie: IMovie) => movie.genre).filter(Boolean) || [])] as string[];
+      const uniqueGenres = [...new Set(data?.map((movie: IMovie) => movie.genre).filter(Boolean) || [])];
       setGenres(uniqueGenres);
     } catch (error) {
       console.error('Error fetching movies:', error);
