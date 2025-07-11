@@ -36,7 +36,7 @@ const corsOptions = {
 app.use(cors(corsOptions)); // Use the new cors options
 app.use(express.json());
 
-mongoose.connect(MONGODB_URI)
+mongoose.connect("http://localhost:5173/cinemaDB")
   .then(() => console.log('✅ Successfully connected to MongoDB'))
   .catch((error) => console.error('❌ Error connecting to MongoDB:', error));
 
