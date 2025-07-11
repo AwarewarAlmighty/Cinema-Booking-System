@@ -12,10 +12,13 @@ export default function MoviesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const moviesPerPage = 8;
 
   useEffect(() => {
     fetchMovies();
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     filterMovies();
@@ -119,6 +122,26 @@ export default function MoviesPage() {
             </p>
           </div>
         )}
+        <div className="flex justify-center mt-8 space-x-4">
+          <button
+            className="btn btn-secondary"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          >
+            Previous
+          </button>
+          <span className="text-white text-sm flex items-center">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="btn btn-secondary"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            Next
+          </button>
+        </div>
+
       </div>
     </div>
   );
