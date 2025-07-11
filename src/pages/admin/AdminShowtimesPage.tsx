@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -220,6 +221,7 @@ export default function AdminShowtimesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShowtime, setEditingShowtime] = useState<IShowtime | null>(null);
   const [showtimeToDelete, setShowtimeToDelete] = useState<IShowtime | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     fetchShowtimes();
@@ -244,6 +246,14 @@ export default function AdminShowtimesPage() {
     setIsModalOpen(true);
   };
   
+  useEffect(() => {
+    if (searchParams.get('openModal') === 'true') {
+      handleOpenModal(null);
+      searchParams.delete('openModal');
+      setSearchParams(searchParams);
+    }
+  }, []);
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingShowtime(null);

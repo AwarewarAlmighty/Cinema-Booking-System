@@ -19,13 +19,12 @@ import PaymentPage from './pages/user/PaymentPage';
 import BookingConfirmationPage from './pages/user/BookingConfirmationPage';
 
 // Admin pages
-import AdminLoginPage from './pages/admin/AdminLoginPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminMoviesPage from './pages/admin/AdminMoviesPage';
-import AdminHallsPage from './pages/admin/AdminHallsPage';
-import AdminShowtimesPage from './pages/admin/AdminShowtimesPage';
-import AdminBookingsPage from './pages/admin/AdminBookingsPage';
-import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import AdminMoviesPage from './pages/admin/AdminMoviesPage'
+import AdminHallsPage from './pages/admin/AdminHallsPage'
+import AdminShowtimesPage from './pages/admin/AdminShowtimesPage'
+import AdminBookingsPage from './pages/admin/AdminBookingsPage'
 
 function App() {
   return (
@@ -59,7 +58,6 @@ function App() {
         <Route path="halls" element={<AdminHallsPage />} />
         <Route path="showtimes" element={<AdminShowtimesPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
-        <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
       </Route>
     </Routes>
   );

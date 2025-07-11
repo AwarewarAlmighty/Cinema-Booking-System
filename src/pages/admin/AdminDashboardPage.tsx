@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { useEffect, useState } from 'react'
+import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface DashboardStats {
   totalMovies: number;
@@ -10,7 +11,11 @@ interface DashboardStats {
   totalRevenue: number;
 }
 
+
+
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState<DashboardStats>({
     totalMovies: 0,
     totalHalls: 0,
@@ -139,13 +144,13 @@ export default function AdminDashboardPage() {
         <div className="card p-6">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="btn btn-primary w-full text-left">
+            <button onClick={() => navigate('/admin/movies?openModal=true')} className="btn btn-primary w-full text-left">
               Add New Movie
             </button>
-            <button className="btn btn-secondary w-full text-left">
+            <button onClick={() => navigate('/admin/showtimes?openModal=true')} className="btn btn-secondary w-full text-left">
               Create Showtime
             </button>
-            <button className="btn btn-secondary w-full text-left">
+            <button onClick={() => navigate('/admin/reports?openModal=true')} className="btn btn-secondary w-full text-left">
               View Reports
             </button>
           </div>
