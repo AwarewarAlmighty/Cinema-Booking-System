@@ -1,13 +1,15 @@
-// We are temporarily hardcoding the URL to ensure the connection works.
-const API_BASE_URL = 'https://cinema-booking.zapto.org';
-
+/**
+ * A centralized API fetch function.
+ * It makes requests to relative endpoints (e.g., /api/movies), and Netlify's
+ * proxy will forward them to the backend server defined in the netlify.toml file.
+ *
+ * @param {string} endpoint - The API endpoint to call (e.g., '/api/movies').
+ * @param {RequestInit} [options={}] - Optional fetch options (method, body, etc.).
+ * @returns {Promise<any>} A promise that resolves to the JSON response.
+ */
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  // Construct the full URL for the API endpoint
-  const fullUrl = `${API_BASE_URL}${endpoint}`;
-
-  console.log(`Fetching from: ${fullUrl}`); // This will help in debugging
-
-  const response = await fetch(fullUrl, {
+  // The endpoint should always start with '/api/' for the proxy to work.
+  const response = await fetch(endpoint, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -15,13 +17,14 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     },
   });
 
+  // If the server's response is not OK, we throw an error to be caught
+  // by the calling function, which helps in debugging.
   if (!response.ok) {
-    // If the response is not OK, we throw an error to be caught by the calling function
-    const errorBody = await response.text(); // Get the response body for more details
-    console.error(`API call failed with status ${response.status}: ${errorBody}`);
+    const errorBody = await response.text();
+    console.error(`API call to ${endpoint} failed with status ${response.status}: ${errorBody}`);
     throw new Error(`API call failed: ${response.statusText}`);
   }
 
-  // If the response is OK, parse it as JSON
+  // If the response is successful, parse and return the JSON body.
   return response.json();
 };
