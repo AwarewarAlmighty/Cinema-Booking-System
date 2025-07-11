@@ -36,7 +36,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
         <div className="flex gap-2 mt-auto">
             {/* This button now links to the movie details page */}
             <Link
-              to={`/movie/${movie._id}`}
+              to={`/movies/${movie._id}`}
               className="btn btn-secondary flex-1"
             >
               View Details

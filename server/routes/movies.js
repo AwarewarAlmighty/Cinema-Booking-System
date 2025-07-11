@@ -7,7 +7,18 @@ const router = express.Router();
 // Fetches all movies from the database
 router.get('/', async (req, res) => {
     try {
-        const movies = await Movie.find().sort({ createdAt: -1 });
+        const page = Number(req.query.page) || 1; // Get the page number from query params, default to 1
+        const perPage = Number(req.query.perPage) || 10; // Get the limit from query
+        const [total, movies] = await Promise.all([
+            Movie.countDocuments(), // Count total documents for pagination 
+            Movie.find()
+            .skip((page - 1) * perPage)
+            .limit(perPage) // Fetch movies with pagination
+            .sort({ createdAt: -1 }) // Sort by creation date, newest first
+        ]);
+
+        const totalPages = Math.ceil(total / perPage); 
+        // Return the movies and pagination info   
         res.status(200).json(movies);
     } catch (error) {
         res.status(500).json({ message: 'Server error while fetching movies.' });
