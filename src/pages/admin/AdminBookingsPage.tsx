@@ -85,6 +85,34 @@ export default function AdminBookingsPage() {
     }
   };
 
+  const handleExport = () => {
+    const csvRows = [
+      ['Booking ID', 'Movie', 'Show Date', 'Start Time', 'Seats', 'Amount', 'Status'],
+      ...bookings.map(b => [
+        b._id,
+        b.showtime.movie.title,
+        b.showtime.show_date,
+        b.showtime.start_time,
+        b.selected_seats.join(', '),
+        b.total_amount,
+        b.status
+      ])
+    ];
+
+    const csvContent = csvRows
+      .map(row => row.map(String).map(val => `"${val}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bookings_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getStatusBadge = (status: string) => {
     const baseClasses = 'status-badge';
     switch (status) {
@@ -131,7 +159,7 @@ export default function AdminBookingsPage() {
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <button className="btn btn-secondary flex items-center space-x-2">
+          <button onClick={handleExport} className="btn btn-secondary flex items-center space-x-2">
             <Download className="h-4 w-4" />
             <span>Export</span>
           </button>
