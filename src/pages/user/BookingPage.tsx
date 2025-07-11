@@ -34,6 +34,8 @@ export default function BookingPage() {
     if (selectedShowtime) {
       fetchOccupiedSeats(selectedShowtime._id);
     }
+    // Reset selected seats when showtime changes
+    setSelectedSeats([]);
   }, [selectedShowtime]);
 
   const fetchMovieAndShowtimes = async (id: string) => {
@@ -48,9 +50,18 @@ export default function BookingPage() {
 
       const movieData = await movieResponse.json();
       const showtimesData = await showtimesResponse.json();
+      
+      // Filter out past showtimes
+      const now = new Date();
+      const upcomingShowtimes = showtimesData.filter((showtime: IShowtime) => {
+        const [hours, minutes] = showtime.start_time.split(':');
+        const showtimeDate = new Date(showtime.show_date);
+        showtimeDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+        return showtimeDate > now;
+      });
 
       setMovie(movieData);
-      setShowtimes(showtimesData || []);
+      setShowtimes(upcomingShowtimes || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load movie details');

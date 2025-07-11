@@ -337,44 +337,53 @@ export default function AdminShowtimesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
-                {showtimes.map((showtime) => (
-                  <tr key={showtime._id} className="hover:bg-dark-800/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-white max-w-xs truncate">
+                {showtimes.map((showtime) => {
+                  const now = new Date();
+                  const [hours, minutes] = showtime.start_time.split(':');
+                  const showtimeDate = new Date(showtime.show_date);
+                  showtimeDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+                  const isPast = showtimeDate < now;
+
+                  return (
+                    <tr key={showtime._id} className={isPast ? 'bg-dark-800/20 text-slate-500' : 'hover:bg-dark-800/50'}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium max-w-xs truncate">
                             {showtime.movie?.title}
-                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-500/20 text-blue-400 rounded-full">
-                        {showtime.hall?.hall_name}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                      <div>{new Date(showtime.show_date).toLocaleDateString()}</div>
-                      <div className="text-slate-400">{showtime.start_time} - {showtime.end_time}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-400">
-                      IDR {showtime.ticket_price.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleOpenModal(showtime)} className="text-green-400 hover:text-green-300 p-2 rounded-full hover:bg-dark-700">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(showtime)}
-                          className="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-dark-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${isPast ? 'bg-slate-700' : 'bg-blue-500/20 text-blue-400'}`}>
+                          {showtime.hall?.hall_name}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div>{new Date(showtime.show_date).toLocaleDateString()}</div>
+                        <div className={isPast ? 'text-slate-600' : 'text-slate-400'}>{showtime.start_time} - {showtime.end_time}</div>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${isPast ? '' : 'text-primary-400'}`}>
+                        IDR {showtime.ticket_price.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => handleOpenModal(showtime)} 
+                            disabled={isPast}
+                            className="text-green-400 hover:text-green-300 p-2 rounded-full hover:bg-dark-700 disabled:text-slate-600 disabled:cursor-not-allowed"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(showtime)}
+                            disabled={isPast}
+                            className="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-dark-700 disabled:text-slate-600 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
