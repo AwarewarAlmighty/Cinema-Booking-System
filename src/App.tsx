@@ -38,7 +38,7 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="movies" element={<MoviesPage />} />
-        <Route path="movies/:id" element={<MovieDetailsPage />} /> {/* keep consistent plural */}
+        <Route path="/movies/:id" element={<MovieDetailsPage />} /> {/* keep consistent plural */}
         <Route path="book/:movieId" element={
           <ProtectedRoute>
             <BookingPage />
