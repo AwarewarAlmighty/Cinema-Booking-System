@@ -1,39 +1,36 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Ensure cors is imported
+const cors = require('cors');
 require('dotenv').config();
 
 // Import all route handlers
 const authRoutes = require('./routes/auth');
 const movieRoutes = require('./routes/movies');
 const hallRoutes = require('./routes/halls');
-const showtimeRoutes = require('./routes/showtimes'); 
-const bookingRoutes = require('./routes/bookings');   
+const showtimeRoutes = require('./routes/showtimes');
+const bookingRoutes = require('./routes/bookings');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI; // Use the URI from your .env file
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// --- CORS Configuration ---
-// Define the allowed origins. This tells the server to accept requests
-// from your local development server and your live Netlify site.
+// --- NEW, MORE ROBUST CORS CONFIGURATION ---
 const allowedOrigins = [
-  'http://localhost:5173', // Your local frontend
-  'https://cinema-booking-system.netlify.app' // Your deployed frontend
+  'http://localhost:5173',
+  'https://cinema-booking-system.netlify.app'
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
-};
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  return next();
+});
 
-// --- Middleware ---
-app.use(cors(corsOptions)); // Use the new cors options
 app.use(express.json());
 
 mongoose.connect(MONGODB_URI)
