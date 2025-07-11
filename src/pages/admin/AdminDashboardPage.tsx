@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Film, Building, Calendar, Users, TrendingUp } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardStats {
   totalMovies: number;

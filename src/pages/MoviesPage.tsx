@@ -32,7 +32,7 @@ export default function MoviesPage() {
       setMovies(data || []);
       
       // Extract unique genres
-      const uniqueGenres = [...new Set(data?.map((movie: IMovie) => movie.genre).filter(Boolean) || [])];
+      const uniqueGenres = [...new Set(data?.map((movie: IMovie) => movie.genre).filter(Boolean) || [])] as string[];
       setGenres(uniqueGenres);
     } catch (error) {
       console.error('Error fetching movies:', error);
